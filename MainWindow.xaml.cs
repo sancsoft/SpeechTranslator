@@ -148,6 +148,8 @@ namespace S2SMtDemoClient
 
             
             ShowMiniWindow.IsChecked = Properties.Settings.Default.ShowMiniWindow;
+            if (ShowMiniWindow.IsChecked.Value) ResetMiniWindow.Visibility = Visibility.Visible; else ResetMiniWindow.Visibility = Visibility.Collapsed;
+
             FeatureTTS.IsChecked = Properties.Settings.Default.TTS;
             CutInputAudioCheckBox.IsChecked = Properties.Settings.Default.CutInputDuringTTS;
             FeaturePartials.IsChecked = Properties.Settings.Default.PartialResults;
@@ -1102,6 +1104,26 @@ namespace S2SMtDemoClient
         {
             miniwindow.SetFontSize(MiniWindow_Lines.SelectedIndex);
             Properties.Settings.Default.MiniWindow_Lines = MiniWindow_Lines.SelectedIndex;
+        }
+
+        private void ResetMiniWindow_Click(object sender, RoutedEventArgs e)
+        {
+            miniwindow.Height = 100;
+            miniwindow.Width = 400;
+            miniwindow.Left = 100;
+            miniwindow.Top = 100;
+        }
+
+        private void ShowMiniWindow_Checked(object sender, RoutedEventArgs e)
+        {
+            ResetMiniWindow.Visibility = Visibility.Visible;
+            miniwindow.Show();
+        }
+
+        private void ShowMiniWindow_UnChecked(object sender, RoutedEventArgs e)
+        {
+            ResetMiniWindow.Visibility = Visibility.Collapsed;
+            miniwindow.Hide();
         }
 
     }
