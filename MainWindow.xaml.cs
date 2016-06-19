@@ -312,6 +312,7 @@ namespace S2SMtDemoClient
                 DialogTranslation.FlowDirection = System.Windows.FlowDirection.RightToLeft;
                 DialogTranslation.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
             }
+            miniwindow.DisplayText.Text = "";
         }
 
         private void FromLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1161,6 +1162,7 @@ namespace S2SMtDemoClient
         private void ShowMiniWindow_Checked(object sender, RoutedEventArgs e)
         {
             ResetMiniWindow.Visibility = Visibility.Visible;
+            miniwindow.DisplayText.Text = "";
             miniwindow.Show();
         }
 
