@@ -385,7 +385,7 @@ namespace S2SMtDemoClient
             }
             else
             {
-                throw new InvalidOperationException("Type of SpeechClientOptions in not supported.");
+                throw new InvalidOperationException("Type of SpeechClientOptions is not supported.");
             }
 
             if (ShowMiniWindow.IsChecked.Value) miniwindow.Show();
@@ -1108,10 +1108,17 @@ namespace S2SMtDemoClient
 
         private void ResetMiniWindow_Click(object sender, RoutedEventArgs e)
         {
-            miniwindow.Height = 100;
-            miniwindow.Width = 400;
-            miniwindow.Left = 100;
-            miniwindow.Top = 100;
+            Screen[] screens = Screen.AllScreens;
+            System.Drawing.Rectangle rect = new System.Drawing.Rectangle();
+            for (int i = 0; i < screens.Length; i++)
+            {
+                rect = screens[i].Bounds;
+                if (!screens[i].Primary) break;
+            }
+            miniwindow.Height = rect.Height / 8;
+            miniwindow.Width = rect.Width;
+            miniwindow.Left = rect.Left;
+            miniwindow.Top = rect.Bottom - (rect.Height / 8);
         }
 
         private void ShowMiniWindow_Checked(object sender, RoutedEventArgs e)

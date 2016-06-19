@@ -51,7 +51,7 @@
                 <CheckBox x:Name="FeatureTTS" Content="TTS" Margin="10,0,0,0" VerticalAlignment="Center"/>
                 <CheckBox x:Name="CutInputAudioCheckBox" Content="Cut input audio during TTS" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0"/>
                 <CheckBox x:Name="FeaturePartials" Content="Partial Results" Margin="20,0,0,0" VerticalAlignment="Center"/>
-                <Button x:Name="UpdateSettings" Content="Update" Background="#FFACACAC" Margin="20,0" Width="60" VerticalAlignment="Center"/>
+                <Button x:Name="UpdateSettings" Content="Update" Background="#FFACACAC" Margin="20,0" Height="20" Width="60" VerticalAlignment="Center"/>
             </StackPanel>
             <Label Grid.Row="6" Grid.Column="0" Content="Profanity Filter" VerticalAlignment="Center" />
             <ComboBox x:Name="Profanity" Grid.Row="6" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120">
