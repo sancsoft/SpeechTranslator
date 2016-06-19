@@ -317,6 +317,19 @@ namespace S2SMtDemoClient
         private void FromLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Properties.Settings.Default.FromLanguageIndex = FromLanguage.SelectedIndex;
+            string code = ((ComboBoxItem)this.FromLanguage.SelectedItem).Tag.ToString();
+            bool LTR;
+            isLTR.TryGetValue(code, out LTR);
+            if (LTR)
+            {
+                DialogRecognition.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                DialogRecognition.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+            }
+            else
+            {
+                DialogRecognition.FlowDirection = System.Windows.FlowDirection.RightToLeft;
+                DialogRecognition.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
+            }
         }
 
         private void UpdateVoiceComboBox(System.Windows.Controls.ComboBox voiceComboBox, ComboBoxItem languageSelectedItem)
