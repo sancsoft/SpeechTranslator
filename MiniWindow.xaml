@@ -7,6 +7,6 @@
         mc:Ignorable="d"
         Title="Translated by Microsoft Translator" Height="96" Width="500" Opacity="0.8" BorderThickness="2" ShowInTaskbar="False" Topmost="True" ToolTip="Display Window" Margin="1">
     <Grid>
-        <TextBox x:Name="DisplayText" TextWrapping="Wrap"/>
+        <TextBox x:Name="DisplayText" TextWrapping="Wrap" Margin="4,0"/>
     </Grid>
 </Window>

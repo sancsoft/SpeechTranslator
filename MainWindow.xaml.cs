@@ -63,6 +63,7 @@ namespace S2SMtDemoClient
 
         private Dictionary<string, string> spokenLanguages; //create dictionary for the speech translation langauges 
         private Dictionary<string, string> textLanguages; //create dictionary for the text translation languages
+        private Dictionary<string, bool> isLTR; //If this language ID is LTR or RTL
         private Dictionary<string, List<TTsDetail>> voices; //convert a list into a dictionary and call it voices TTsDetails is a class in this file
 
         private WaveIn recorder; //WaveIn is a class
@@ -223,6 +224,7 @@ namespace S2SMtDemoClient
                 //create dictionaries to hold the language specific data
                 spokenLanguages = new Dictionary<string, string>();
                 textLanguages = new Dictionary<string, string>();
+                isLTR = new Dictionary<string, bool>();
                 voices = new Dictionary<string, List<TTsDetail>>();
 
                 JObject jResponse = JObject.Parse(await response.Content.ReadAsStringAsync()); //get the json from the async call with the response var created above, parse it and put it in a var called jResponse - JObject is a newton class
@@ -268,6 +270,11 @@ namespace S2SMtDemoClient
                     string code = jText.Name;
                     string displayName = languageDetails["name"].ToString();
                     textLanguages.Add(code, displayName);
+
+                    string direction = languageDetails["dir"].ToString().ToLower();
+                    bool LTR = true;
+                    if (direction == "rtl") LTR = false;
+                    isLTR.Add(code, LTR);
                 }
 
                 textLanguages = textLanguages.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
@@ -287,7 +294,24 @@ namespace S2SMtDemoClient
         {
             var voiceCombo = this.Voice;
             this.UpdateVoiceComboBox(voiceCombo, ToLanguage.SelectedItem as ComboBoxItem);
-            miniwindow.DisplayText.Language = System.Windows.Markup.XmlLanguage.GetLanguage(((ComboBoxItem)this.ToLanguage.SelectedItem).Tag.ToString());
+            string code = ((ComboBoxItem)this.ToLanguage.SelectedItem).Tag.ToString();
+            miniwindow.DisplayText.Language = System.Windows.Markup.XmlLanguage.GetLanguage(code);
+            bool LTR;
+            isLTR.TryGetValue(code, out LTR);
+            if (LTR)
+            {
+                miniwindow.DisplayText.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                miniwindow.DisplayText.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+                DialogTranslation.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                DialogTranslation.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+            }
+            else
+            {
+                miniwindow.DisplayText.FlowDirection = System.Windows.FlowDirection.RightToLeft;
+                miniwindow.DisplayText.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
+                DialogTranslation.FlowDirection = System.Windows.FlowDirection.RightToLeft;
+                DialogTranslation.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
+            }
         }
 
         private void FromLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
