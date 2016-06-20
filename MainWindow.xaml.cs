@@ -65,6 +65,8 @@ namespace S2SMtDemoClient
         private Dictionary<string, string> textLanguages; //create dictionary for the text translation languages
         private Dictionary<string, bool> isLTR; //If this language ID is LTR or RTL
         private Dictionary<string, List<TTsDetail>> voices; //convert a list into a dictionary and call it voices TTsDetails is a class in this file
+        private Dictionary<string, string> fromLanguages; //hold the mapping from spokenLangauge IDs (en-US) to textLanguageIDs (en). Only purpose is to maintain the set of Bidi languages.
+
 
         private WaveIn recorder; //WaveIn is a class
 
@@ -223,6 +225,7 @@ namespace S2SMtDemoClient
 
                 //create dictionaries to hold the language specific data
                 spokenLanguages = new Dictionary<string, string>();
+                fromLanguages = new Dictionary<string, string>();
                 textLanguages = new Dictionary<string, string>();
                 isLTR = new Dictionary<string, bool>();
                 voices = new Dictionary<string, List<TTsDetail>>();
@@ -252,8 +255,10 @@ namespace S2SMtDemoClient
                 {
                     JObject languageDetails = (JObject)jSpeech.Value;
                     string code = jSpeech.Name;
+                    string simplecode = languageDetails["language"].ToString();
                     string displayName = languageDetails["name"].ToString();
                     spokenLanguages.Add(code, displayName);
+                    fromLanguages.Add(code,simplecode);
                 }
 
                 spokenLanguages = spokenLanguages.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
@@ -319,7 +324,8 @@ namespace S2SMtDemoClient
         {
             Properties.Settings.Default.FromLanguageIndex = FromLanguage.SelectedIndex;
             string code = ((ComboBoxItem)this.FromLanguage.SelectedItem).Tag.ToString();
-            bool LTR;
+            fromLanguages.TryGetValue(code, out code);  //map fully specified language code "en-us" to simple language code "en"
+            bool LTR = true;
             isLTR.TryGetValue(code, out LTR);
             if (LTR)
             {
