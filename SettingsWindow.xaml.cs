@@ -43,5 +43,26 @@ namespace S2SMtDemoClient
         {
             System.Diagnostics.Process.Start("https://datamarket.azure.com/developer/applications");
         }
+
+        private void ObtainSubscription_MouseEnter(object sender, MouseEventArgs e)
+        {
+            ObtainSubscription.Foreground = Brushes.DarkBlue;
+        }
+
+        private void ObtainSubscription_MouseLeave(object sender, MouseEventArgs e)
+        {
+            ObtainSubscription.Foreground = Brushes.Blue;
+        }
+
+        private void ObtainClientID_MouseEnter(object sender, MouseEventArgs e)
+        {
+            ObtainClientID.Foreground = Brushes.DarkBlue;
+        }
+
+        private void ObtainClientID_MouseLeave(object sender, MouseEventArgs e)
+        {
+            ObtainClientID.Foreground = Brushes.Blue;
+        }
+
     }
 }
