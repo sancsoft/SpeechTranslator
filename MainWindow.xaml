@@ -5,13 +5,12 @@
         Title="Microsoft Speech Translator" Height="600" Width="950" MinHeight="500" MinWidth="800">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="285" />
+            <RowDefinition Height="260" />
             <RowDefinition Height="170" />
             <RowDefinition  />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Background="#FFE6E6E6" Margin="0">
             <Grid.RowDefinitions>
-                <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
@@ -40,10 +39,10 @@
             <Label x:Name="Language2Label" Grid.Row="4" Grid.Column="0" Content="To Language" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <ComboBox x:Name="ToLanguage" HorizontalAlignment="Left" VerticalAlignment="Center" Width="200" SelectionChanged="ToLanguage_SelectionChanged"/>
-                <CheckBox x:Name="ShowMiniWindow" Content="Show Mini Window" VerticalAlignment="Center" Margin="10,0,0,0" Checked="ShowMiniWindow_Checked" Unchecked="ShowMiniWindow_UnChecked"/>
-                <Label Content="Lines to show in Mini Window:" VerticalAlignment="Center" Margin="20,0,0,0"/>
+                <CheckBox x:Name="ShowMiniWindow" Content="Show Subtitles" VerticalAlignment="Center" Margin="10,0,0,0" Checked="ShowMiniWindow_Checked" Unchecked="ShowMiniWindow_UnChecked"/>
+                <Label Content="# of lines:" VerticalAlignment="Center" Margin="20,0,0,0"/>
                 <ComboBox x:Name="MiniWindow_Lines" Width="Auto" SelectionChanged="MiniWindow_Lines_SelectionChanged"/>
-                <Button x:Name="ResetMiniWindow" Height="20" Width="120" Content="Reset Mini Window" Background="#FFACACAC" Margin="20,0" VerticalAlignment="Center" HorizontalAlignment="Right" Click="ResetMiniWindow_Click"/>
+                <Button x:Name="ResetMiniWindow" Height="20" Width="140" Content="Auto-position Subtitles" Background="#FFACACAC" Margin="20,0" VerticalAlignment="Center" HorizontalAlignment="Right" Click="ResetMiniWindow_Click"/>
             </StackPanel>
             <Label x:Name="VoiceLabel" Grid.Row="5" Grid.Column="0" Content="Voice" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center">
@@ -59,7 +58,7 @@
                 <ComboBoxItem Tag="moderate">Moderate</ComboBoxItem>
                 <ComboBoxItem Tag="strict" IsSelected="True">Strict</ComboBoxItem>
             </ComboBox>
-            <Grid Grid.Row="7" Grid.RowSpan="2" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid Grid.Row="7" Grid.RowSpan="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="25" />
                     <RowDefinition  />
@@ -81,7 +80,6 @@
                     <CheckBox x:Name="LogSentAudio" Content="Log audio sent" Margin="5,0,0,0" IsChecked="False" VerticalAlignment="Center" />
                     <CheckBox x:Name="LogReceivedAudio" Content="Log audio received (TTS)" Margin="5,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
-                <TextBox Grid.Row="1" Grid.ColumnSpan="5" x:Name="TraceCmd" VerticalAlignment="Top"  Text="" HorizontalAlignment="Stretch" Margin="0,5,5,0" Height="18" />
             </Grid>
             <Label x:Name="CutInputAudioLabel" Grid.Row="7" Grid.Column="0" Content="CUTTING INPUT AUDIO" Foreground="Blue" VerticalAlignment="Center" Visibility="Collapsed" />
         </Grid>

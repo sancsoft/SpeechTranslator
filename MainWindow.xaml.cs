@@ -1079,11 +1079,11 @@ namespace S2SMtDemoClient
                 case UiState.Connected:
                     this.StartListening.IsEnabled = true;
                     this.AudioBytesSentLabel.Visibility = Visibility.Visible;
-                    this.SetMessage("Connected! After you start speaking, transcripts in the source language will show here...",
-                            "...and translations to the target language will show here.", MessageKind.Status);
+                    this.SetMessage("Connected! After you start speaking, transcripts will show here...",
+                            "...and translations will show here.", MessageKind.Status);
                     this.StartListening.Content = "Stop";
                     //this.TraceCmd.Text = this.GetTraceCmd();
-                    this.Log("I: {0}", this.TraceCmd.Text);
+                    //this.Log("I: {0}", this.TraceCmd.Text);
                     isInputAllowed = false;
                     break;
                 case UiState.Disconnecting:
