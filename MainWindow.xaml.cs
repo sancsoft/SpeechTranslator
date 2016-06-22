@@ -151,7 +151,16 @@ namespace S2SMtDemoClient
 
             
             ShowMiniWindow.IsChecked = Properties.Settings.Default.ShowMiniWindow;
-            if (ShowMiniWindow.IsChecked.Value) ResetMiniWindow.Visibility = Visibility.Visible; else ResetMiniWindow.Visibility = Visibility.Collapsed;
+            if (ShowMiniWindow.IsChecked.Value)
+            {
+                miniwindow.Show();
+                ResetMiniWindow.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ResetMiniWindow.Visibility = Visibility.Collapsed;
+                miniwindow.Hide();
+            }
 
             FeatureTTS.IsChecked = Properties.Settings.Default.TTS;
             CutInputAudioCheckBox.IsChecked = Properties.Settings.Default.CutInputDuringTTS;
@@ -432,8 +441,6 @@ namespace S2SMtDemoClient
                 throw new InvalidOperationException("Type of SpeechClientOptions is not supported.");
             }
 
-            if (ShowMiniWindow.IsChecked.Value) miniwindow.Show();
-
             s2smtClient.OnBinaryData += (c, a) => { AddSamplesToPlay(a, suspendInputAudioDuringTTS); };
             s2smtClient.OnEndOfBinaryData += (c, a) => { AddSamplesToPlay(a, suspendInputAudioDuringTTS); };
             s2smtClient.OnTextData += (c, a) => { textDecoder.AppendData(a); };
@@ -506,7 +513,13 @@ namespace S2SMtDemoClient
 
             Stopwatch watch = Stopwatch.StartNew();
             UpdateUiState(UiState.Connecting);
-            if(ShowMiniWindow.IsChecked.Value) miniwindow.Show();
+
+            if (ShowMiniWindow.IsChecked.Value)
+            {
+                miniwindow.DisplayText.Text = "";
+                miniwindow.Show();
+            }
+
             //This section is putting default values in case there are missing values in the UI
             // Minimal validation
             if (this.IsMissingInput(this.FromLanguage.SelectedItem, "source language")) return;
@@ -718,8 +731,6 @@ namespace S2SMtDemoClient
             if (this.currentState != UiState.Connected) return;
 
             UpdateUiState(UiState.Disconnecting);
-
-            miniwindow.Hide();
 
             if (recorder != null)
             {

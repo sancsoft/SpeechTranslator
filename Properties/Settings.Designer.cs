@@ -73,7 +73,7 @@ namespace S2SMtDemoClient.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
         public int FromLanguageIndex {
             get {
                 return ((int)(this["FromLanguageIndex"]));
@@ -85,7 +85,7 @@ namespace S2SMtDemoClient.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
         public int ToLanguageIndex {
             get {
                 return ((int)(this["ToLanguageIndex"]));
@@ -145,7 +145,7 @@ namespace S2SMtDemoClient.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
         public int MiniWindow_Lines {
             get {
                 return ((int)(this["MiniWindow_Lines"]));
