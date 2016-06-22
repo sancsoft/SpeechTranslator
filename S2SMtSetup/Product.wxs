@@ -33,7 +33,7 @@
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="ApplicationShortcut" Guid="0DDF3BDD-C6B7-4922-B835-B16902AAC345">
         <Shortcut Id="ApplicationStartMenuShortcut"
-                  Name="Microsoft Speech Translator"
+                  Name="Speech Translator"
                   Description="Microsoft Speech Translator"
                   Target="$(var.S2SMtDemoClient.TargetPath)"
                   WorkingDirectory="APPLICATIONROOTDIRECTORY"/>
