@@ -108,6 +108,8 @@ namespace S2SMtDemoClient
 
         private MiniWindow miniwindow;
 
+        private int screennumber = 0;   //keeps track of the screen # the miniwindow is positioned on
+
         public MainWindow()
         {
             InitializeComponent();
@@ -1165,15 +1167,13 @@ namespace S2SMtDemoClient
         {
             Screen[] screens = Screen.AllScreens;
             System.Drawing.Rectangle rect = new System.Drawing.Rectangle();
-            for (int i = 0; i < screens.Length; i++)
-            {
-                rect = screens[i].Bounds;
-                if (!screens[i].Primary) break;
-            }
+            if (screennumber >= screens.Length) screennumber = 0;
+            rect = screens[screennumber].Bounds;
             miniwindow.Height = rect.Height / 8;
             miniwindow.Width = rect.Width;
             miniwindow.Left = rect.Left;
             miniwindow.Top = rect.Bottom - (rect.Height / 8);
+            screennumber++;
         }
 
         private void ShowMiniWindow_Checked(object sender, RoutedEventArgs e)

@@ -42,7 +42,7 @@
                 <CheckBox x:Name="ShowMiniWindow" Content="Show Subtitles" VerticalAlignment="Center" Margin="10,0,0,0" Checked="ShowMiniWindow_Checked" Unchecked="ShowMiniWindow_UnChecked"/>
                 <Label Content="# of lines:" VerticalAlignment="Center" Margin="20,0,0,0"/>
                 <ComboBox x:Name="MiniWindow_Lines" Width="Auto" SelectionChanged="MiniWindow_Lines_SelectionChanged"/>
-                <Button x:Name="ResetMiniWindow" Height="20" Width="140" Content="Auto-position Subtitles" Background="#FFACACAC" Margin="20,0" VerticalAlignment="Center" HorizontalAlignment="Right" Click="ResetMiniWindow_Click"/>
+                <Button x:Name="ResetMiniWindow" Height="20" Width="180" Content="Auto-position Subtitle Window" Background="#FFACACAC" Margin="20,0" VerticalAlignment="Center" HorizontalAlignment="Right" Click="ResetMiniWindow_Click"/>
             </StackPanel>
             <Label x:Name="VoiceLabel" Grid.Row="5" Grid.Column="0" Content="Voice" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1" VerticalAlignment="Center">
