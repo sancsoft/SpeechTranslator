@@ -1165,15 +1165,19 @@ namespace S2SMtDemoClient
 
         private void ResetMiniWindow_Click(object sender, RoutedEventArgs e)
         {
+            miniwindow.Hide();
             Screen[] screens = Screen.AllScreens;
             System.Drawing.Rectangle rect = new System.Drawing.Rectangle();
             if (screennumber >= screens.Length) screennumber = 0;
             rect = screens[screennumber].Bounds;
-            miniwindow.Height = rect.Height / 8;
+            miniwindow.Height = Math.Abs(rect.Height / 8);
             miniwindow.Width = rect.Width;
             miniwindow.Left = rect.Left;
-            miniwindow.Top = rect.Bottom - (rect.Height / 8);
+            miniwindow.Top = rect.Bottom - miniwindow.Height;
+            this.SetMessage(String.Format("rect.Bottom: {0}, Width: {1}", rect.Bottom, rect.Width), String.Format("miniwindow.Top: {0} miniwindow.Left: {1}", miniwindow.Top, miniwindow.Left), MessageKind.Status);
             screennumber++;
+            miniwindow.Show();
+            this.Focus();
         }
 
         private void ShowMiniWindow_Checked(object sender, RoutedEventArgs e)
