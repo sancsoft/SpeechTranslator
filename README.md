@@ -1,7 +1,8 @@
-# CSharp-Speech-to-Speech-App
-C Sharp Application that uses the Microsoft Translator API.
+# Speech Translator
+Translate as you speak, and show a subtitle window on this or on another screen.
+Demo application to show the use of close to real-time translation and transcription.
 
-####Getting Started
+##Getting Started
 -You will need to setup a subscription with Microsoft Translator. [Click Here] (https://www.microsoft.com/en-us/translator/default.aspx) to get started.
 
 -Speech API documentation can be [found here.] (https://docs.microsofttranslator.com/)
