@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S2SMtDemoClient", "S2SMtDemoClient.csproj", "{4D6089AB-F0AF-450C-8978-4D2B943E9A1F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpeechTranslator", "SpeechTranslator.csproj", "{4D6089AB-F0AF-450C-8978-4D2B943E9A1F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{528D2384-7533-4313-BAA1-76A44D065256}"
 	ProjectSection(SolutionItems) = preProject

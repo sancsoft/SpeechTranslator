@@ -40,7 +40,7 @@
         <Shortcut Id="ApplicationStartMenuShortcut"
                   Name="Speech Translator"
                   Description="Microsoft Translator Speech Translator"
-                  Target="[INSTALLFOLDER]S2SMtDemoClient.exe"
+                  Target="[INSTALLFOLDER]SpeechTranslator.exe"
                   WorkingDirectory="APPLICATIONROOTDIRECTORY"
                   />
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
@@ -53,13 +53,13 @@
   <Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <Component Id="ProductComponent" Guid="B27FA443-12E7-4F54-B973-FEB93386D929">
-        <File Source="$(var.S2SMtDemoClient.TargetPath)" />
-        <File Source="$(var.S2SMtDemoClient.TargetPath).config" />
-        <File Source="$(var.S2SMtDemoClient.TargetDir)\NAudio.dll" />
-        <File Source="$(var.S2SMtDemoClient.TargetDir)\NAudio.WindowsMediaFormat.dll" />
-        <File Source="$(var.S2SMtDemoClient.TargetDir)\NAudio.xml" />
-        <File Source="$(var.S2SMtDemoClient.TargetDir)\Newtonsoft.Json.dll" />
-        <File Source="$(var.S2SMtDemoClient.TargetDir)\Newtonsoft.Json.xml" />
+        <File Source="$(var.SpeechTranslator.TargetPath)" />
+        <File Source="$(var.SpeechTranslator.TargetPath).config" />
+        <File Source="$(var.SpeechTranslator.TargetDir)\NAudio.dll" />
+        <File Source="$(var.SpeechTranslator.TargetDir)\NAudio.WindowsMediaFormat.dll" />
+        <File Source="$(var.SpeechTranslator.TargetDir)\NAudio.xml" />
+        <File Source="$(var.SpeechTranslator.TargetDir)\Newtonsoft.Json.dll" />
+        <File Source="$(var.SpeechTranslator.TargetDir)\Newtonsoft.Json.xml" />
       </Component>
     </ComponentGroup>
 	</Fragment>

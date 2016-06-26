@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace S2SMtDemoClient
+namespace SpeechTranslator
 {
     /// <summary>
     /// Interaction logic for App.xaml

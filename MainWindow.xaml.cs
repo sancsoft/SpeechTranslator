@@ -31,7 +31,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace S2SMtDemoClient
+namespace SpeechTranslator
 {
 
     /// <summary>
@@ -224,7 +224,7 @@ namespace S2SMtDemoClient
                 request.Headers.Add("Accept-Language", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
                 // add a client-side trace Id. In case of issues, one can contact support and provide this:
-                //string traceId = "S2SMtDemoClient" + Guid.NewGuid().ToString();
+                //string traceId = "SpeechTranslator" + Guid.NewGuid().ToString();
                 //request.Headers.Add("X-ClientTraceId", traceId);
                 //Debug.Print("TraceId: {0}", traceId);
 
