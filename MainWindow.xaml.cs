@@ -103,8 +103,6 @@ namespace SpeechTranslator
             InitializeComponent();
             Debug.Print("This is a debug message");
 
-            miniwindow = new MiniWindow();
-
             Closing += MainWindow_Closing;
 
             int waveInDevices = WaveIn.DeviceCount; //how many recording devices are there on the device
@@ -138,7 +136,6 @@ namespace SpeechTranslator
             MiniWindow_Lines.Items.Add(new ComboBoxItem() { Content = "9" });
 
             MiniWindow_Lines.SelectedIndex = Properties.Settings.Default.MiniWindow_Lines;
-            miniwindow.SetFontSize(Properties.Settings.Default.MiniWindow_Lines);
 
             
             ShowMiniWindow.IsChecked = Properties.Settings.Default.ShowMiniWindow;
@@ -162,6 +159,7 @@ namespace SpeechTranslator
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Disconnect();
+            miniwindow.Closing -= Miniwindow_Closing;
             if (miniwindow != null) miniwindow.Close();
             Properties.Settings.Default.ShowMiniWindow = ShowMiniWindow.IsChecked.Value;
             Properties.Settings.Default.TTS = FeatureTTS.IsChecked.Value;
@@ -170,6 +168,7 @@ namespace SpeechTranslator
             Properties.Settings.Default.ToLanguageIndex = ToLanguage.SelectedIndex;
             Properties.Settings.Default.VoiceIndex = Voice.SelectedIndex;
             Properties.Settings.Default.Save();
+            Environment.Exit(0);
         }
 
         private void UpdateLanguageSettings() //this function gets the language list from service by calling updatelanguagesettingsasync that method calls the api
@@ -504,6 +503,7 @@ namespace SpeechTranslator
 
             if (ShowMiniWindow.IsChecked.Value)
             {
+                if (miniwindow == null) miniwindow = new MiniWindow();
                 miniwindow.DisplayText.Text = "";
                 miniwindow.Show();
             }
@@ -1175,8 +1175,8 @@ namespace SpeechTranslator
             UpdateMiniWindowUI(MiniWindowUIState.closed);
         }
                 
-        public enum MiniWindowUIState { open, closed};
-        public void UpdateMiniWindowUI(MiniWindowUIState state)
+        private enum MiniWindowUIState { open, closed};
+        private void UpdateMiniWindowUI(MiniWindowUIState state)
         {
             switch (state)
             {
@@ -1188,8 +1188,11 @@ namespace SpeechTranslator
                 case MiniWindowUIState.open:
                     ShowMiniWindow.IsChecked = true;
                     ResetMiniWindow.Visibility = Visibility.Visible;
-                    miniwindow = new MiniWindow();
-                    miniwindow.Closing += Miniwindow_Closing;
+                    if (miniwindow == null)
+                    {
+                        miniwindow = new MiniWindow();
+                        miniwindow.Closing += Miniwindow_Closing;
+                    }
                     miniwindow.Show();
                     break;
                 default: 
@@ -1200,6 +1203,8 @@ namespace SpeechTranslator
         private void Miniwindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             UpdateMiniWindowUI(MiniWindowUIState.closed);
+            miniwindow.Closing -= Miniwindow_Closing;
+            miniwindow.Close();
         }
     }
 

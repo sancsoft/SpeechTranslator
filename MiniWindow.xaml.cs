@@ -32,6 +32,7 @@ namespace SpeechTranslator
             Width = (Properties.Settings.Default.MiniWindow_Width > 5) ? Properties.Settings.Default.MiniWindow_Width : 400;
             Left = Properties.Settings.Default.MiniWindow_Left;
             Top = Properties.Settings.Default.MiniWindow_Top;
+            SetFontSize(Properties.Settings.Default.MiniWindow_Lines);
         }
 
         private void MiniWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
