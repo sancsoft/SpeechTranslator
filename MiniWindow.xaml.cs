@@ -56,7 +56,7 @@ namespace SpeechTranslator
         public void SetFontSize(int NoOfLines)
         {
             _NoOfLines = NoOfLines;
-            DisplayText.FontSize = (DisplayText.ActualHeight > 10) ? (DisplayText.ActualHeight / (NoOfLines + 1) * 0.66) : 8;
+            DisplayText.FontSize = (DisplayText.ActualHeight > 10) ? (DisplayText.ActualHeight / (NoOfLines + 1) * 0.73) : 8;
         }
     }
 }

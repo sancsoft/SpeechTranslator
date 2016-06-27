@@ -34,7 +34,8 @@ namespace SpeechTranslator
             ReadyToConnect,
             Connecting,
             Connected,
-            Disconnecting
+            Disconnecting,
+            InvalidCredentials
         }
 
 
@@ -313,6 +314,7 @@ namespace SpeechTranslator
                 DialogTranslation.FlowDirection = System.Windows.FlowDirection.RightToLeft;
                 DialogTranslation.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
             }
+            finaltranslationhistory = "";
             miniwindow.DisplayText.Text = "";
         }
 
@@ -402,22 +404,11 @@ namespace SpeechTranslator
 
         private async Task ConnectAsync(SpeechClientOptions options, bool suspendInputAudioDuringTTS)
         {
-            // Authenticate
-            string admClientId = Properties.Settings.Default.ClientID;
-            string admClientSecret = Properties.Settings.Default.ClientSecret;
-            string ADMScope = "http://api.microsofttranslator.com";
-            string ADMTokenUri = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13";
-            ADMToken ADMAuthenticator = new ADMToken(ADMTokenUri, ADMScope);
-            options.AuthHeaderValue = await ADMAuthenticator.GetToken(admClientId, admClientSecret);
-            if (options.AuthHeaderValue.Length < 10)
-            {
-                SetMessage(String.Format("Please enter ClientID and Secret in the Account Settings."), "", MessageKind.Error);
-                UpdateUiState(UiState.MissingLanguageList);
-            }
+            await ADMAuthenticate(options);
 
             // Create the client
             TextMessageDecoder textDecoder;
-            
+
             if (options.GetType() == typeof(SpeechTranslateClientOptions))
             {
                 s2smtClient = new SpeechClient((SpeechTranslateClientOptions)options, CancellationToken.None);
@@ -450,7 +441,7 @@ namespace SpeechTranslator
                                 var final = msg as FinalResultMessage;
                                 Log("Final recognition {0}: {1}", final.Id, final.Recognition);
                                 Log("Final translation {0}: {1}", final.Id, final.Translation);
-                                this.SafeInvoke(() => SetMessage(final.Recognition, final.Translation, MessageKind.Chat));
+                                SafeInvoke(() => SetMessage(final.Recognition, final.Translation, MessageKind.Chat));
                                 finaltranslationhistory = final.Translation + "\n" + finaltranslationhistory.Substring(0, Math.Min(500, finaltranslationhistory.Length));
                             }
                             if (msg.GetType() == typeof(PartialResultMessage))
@@ -458,28 +449,43 @@ namespace SpeechTranslator
                                 var partial = msg as PartialResultMessage;
                                 Log("Partial recognition {0}: {1}", partial.Id, partial.Recognition);
                                 Log("Partial translation {0}: {1}", partial.Id, partial.Translation);
-                                this.SafeInvoke(() => SetMessage(partial.Recognition, partial.Translation, MessageKind.Chat));
+                                SafeInvoke(() => SetMessage(partial.Recognition, partial.Translation, MessageKind.Chat));
                             }
                         }
                     });
             };
             s2smtClient.Failed += (c, ex) =>
             {
-                this.Log(ex, "E: SpeechTranslation client reported an error.");
+                Log(ex, "E: SpeechTranslation client reported an error.");
             };
             s2smtClient.Disconnected += (c, ea) =>
             {
-                this.SafeInvoke(() =>
+                SafeInvoke(() =>
                 {
                     // We only care to react to server disconnect when our state is Connected. 
-                    if (this.currentState == UiState.Connected)
+                    if (currentState == UiState.Connected)
                     {
-                        this.Log("E: Connection has been lost.");
-                        this.Disconnect();
+                        Log("E: Connection has been lost.");
+                        Disconnect();
                     }
                 });
             };
             await s2smtClient.Connect();
+        }
+
+        private async Task ADMAuthenticate(SpeechClientOptions options)
+        {
+            // Authenticate
+            string admClientId = Properties.Settings.Default.ClientID;
+            string admClientSecret = Properties.Settings.Default.ClientSecret;
+            string ADMScope = "http://api.microsofttranslator.com";
+            string ADMTokenUri = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13";
+            ADMToken ADMAuthenticator = new ADMToken(ADMTokenUri, ADMScope);
+            options.AuthHeaderValue = await ADMAuthenticator.GetToken(admClientId, admClientSecret);
+            if (options.AuthHeaderValue.Length < 10)
+            {
+                UpdateUiState(UiState.InvalidCredentials);
+            }
         }
 
         private bool IsMissingInput(object item, string name)
@@ -504,22 +510,21 @@ namespace SpeechTranslator
             if (ShowMiniWindow.IsChecked.Value)
             {
                 if (miniwindow == null) miniwindow = new MiniWindow();
-                miniwindow.DisplayText.Text = "";
                 miniwindow.Show();
             }
 
             //This section is putting default values in case there are missing values in the UI
             // Minimal validation
-            if (this.IsMissingInput(this.FromLanguage.SelectedItem, "source language")) return;
-            if (this.IsMissingInput(this.ToLanguage.SelectedItem, "target language")) return;
+            if (IsMissingInput(FromLanguage.SelectedItem, "source language")) return;
+            if (IsMissingInput(ToLanguage.SelectedItem, "target language")) return;
             //if (this.IsMissingInput(this.Voice.SelectedItem, "voice")) return;
-            if (this.IsMissingInput(this.Profanity.SelectedItem, "profanity filter")) return;
-            if (this.IsMissingInput(this.Mic.SelectedItem, "microphone")) return;
-            if (this.IsMissingInput(this.Speaker.SelectedItem, "speaker")) return;
+            if (IsMissingInput(Profanity.SelectedItem, "profanity filter")) return;
+            if (IsMissingInput(Mic.SelectedItem, "microphone")) return;
+            if (IsMissingInput(Speaker.SelectedItem, "speaker")) return;
 
-            if (this.LogAutoSave.IsChecked.Value)
+            if (LogAutoSave.IsChecked.Value)
             {
-                this.autoSaveFrom = this.Logs.Items.Count;
+                autoSaveFrom = Logs.Items.Count;
             }
 
             string tag = ((ComboBoxItem)Mic.SelectedItem).Tag as string;
@@ -536,7 +541,7 @@ namespace SpeechTranslator
             }
             bool shouldSuspendInputAudioDuringTTS = this.CutInputAudioCheckBox.IsChecked.HasValue ? this.CutInputAudioCheckBox.IsChecked.Value : false;
 
-            this.correlationId = Guid.NewGuid().ToString("D").Split('-')[0].ToUpperInvariant();
+            correlationId = Guid.NewGuid().ToString("D").Split('-')[0].ToUpperInvariant();
 
             // Setup speech translation client options
             SpeechClientOptions options;
@@ -628,7 +633,7 @@ namespace SpeechTranslator
             {
                 if (t.IsFaulted || t.IsCanceled || !s2smtClient.IsConnected()) //t.isfaulted OR t.iscancelled OR NOT s2smtclient.isconnected() do the following
                 {
-                    this.Log(t.Exception, "E: Unable to connect: cid='{0}', elapsedMs='{1}'.",
+                    Log(t.Exception, "E: Unable to connect: cid='{0}', elapsedMs='{1}'.",
                         this.correlationId, watch.ElapsedMilliseconds);
                     this.SafeInvoke(() => {
                         this.AutoSaveLogs();
@@ -655,7 +660,7 @@ namespace SpeechTranslator
                             {
                                 if (x.IsFaulted)
                                 {
-                                    this.Log(x.Exception, "E: Error while playing audio from input file.");
+                                    Log(x.Exception, "E: Error while playing audio from input file.");
                                 }
                                 else
                                 {
@@ -1079,6 +1084,9 @@ namespace SpeechTranslator
                     this.SetMessage(string.Format("Disconnecting..."), "", MessageKind.Status);
                     isInputAllowed = false;
                     break;
+                case UiState.InvalidCredentials:
+                    SetMessage(String.Format("Please enter ClientID and Secret in the Account Settings."), "", MessageKind.Error);
+                    break;
                 default:
                     break;
             }
@@ -1116,7 +1124,7 @@ namespace SpeechTranslator
 
         private void SafeInvoke(Action action)
         {
-            if (this.Dispatcher.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 action();
             }
