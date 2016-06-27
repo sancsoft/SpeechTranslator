@@ -104,7 +104,8 @@ namespace SpeechTranslator
             Debug.Print("This is a debug message");
 
             miniwindow = new MiniWindow();
-            this.Closing += MainWindow_Closing;
+
+            Closing += MainWindow_Closing;
 
             int waveInDevices = WaveIn.DeviceCount; //how many recording devices are there on the device
             for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++) //loop through and find all of the devices
@@ -143,13 +144,11 @@ namespace SpeechTranslator
             ShowMiniWindow.IsChecked = Properties.Settings.Default.ShowMiniWindow;
             if (ShowMiniWindow.IsChecked.Value)
             {
-                miniwindow.Show();
-                ResetMiniWindow.Visibility = Visibility.Visible;
+                UpdateMiniWindowUI(MiniWindowUIState.open);
             }
             else
             {
-                ResetMiniWindow.Visibility = Visibility.Collapsed;
-                miniwindow.Hide();
+                UpdateMiniWindowUI(MiniWindowUIState.closed);
             }
 
             FeatureTTS.IsChecked = Properties.Settings.Default.TTS;
@@ -159,8 +158,6 @@ namespace SpeechTranslator
 
             UpdateLanguageSettings(); //call a function with no arguments
         }
-
-
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -299,6 +296,7 @@ namespace SpeechTranslator
             var voiceCombo = this.Voice;
             this.UpdateVoiceComboBox(voiceCombo, ToLanguage.SelectedItem as ComboBoxItem);
             string code = ((ComboBoxItem)this.ToLanguage.SelectedItem).Tag.ToString();
+            if (miniwindow == null) miniwindow = new MiniWindow();
             miniwindow.DisplayText.Language = System.Windows.Markup.XmlLanguage.GetLanguage(code);
             bool LTR;
             isLTR.TryGetValue(code, out LTR);
@@ -1147,13 +1145,13 @@ namespace SpeechTranslator
 
         private void MiniWindow_Lines_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (miniwindow == null) miniwindow = new MiniWindow();
             miniwindow.SetFontSize(MiniWindow_Lines.SelectedIndex);
             Properties.Settings.Default.MiniWindow_Lines = MiniWindow_Lines.SelectedIndex;
         }
 
         private void ResetMiniWindow_Click(object sender, RoutedEventArgs e)
         {
-            miniwindow.Hide();
             Screen[] screens = Screen.AllScreens;
             System.Drawing.Rectangle rect = new System.Drawing.Rectangle();
             if (screennumber >= screens.Length) screennumber = 0;
@@ -1162,25 +1160,47 @@ namespace SpeechTranslator
             miniwindow.Width = rect.Width;
             miniwindow.Left = rect.Left;
             miniwindow.Top = rect.Bottom - miniwindow.Height;
-            this.SetMessage(String.Format("rect.Bottom: {0}, Width: {1}", rect.Bottom, rect.Width), String.Format("miniwindow.Top: {0} miniwindow.Left: {1}", miniwindow.Top, miniwindow.Left), MessageKind.Status);
+            SetMessage(string.Format("rect.Bottom: {0}, Width: {1}", rect.Bottom, rect.Width), string.Format("miniwindow.Top: {0} miniwindow.Left: {1}", miniwindow.Top, miniwindow.Left), MessageKind.Status);
             screennumber++;
-            miniwindow.Show();
-            this.Focus();
+            Focus();
         }
 
         private void ShowMiniWindow_Checked(object sender, RoutedEventArgs e)
         {
-            ResetMiniWindow.Visibility = Visibility.Visible;
-            miniwindow.DisplayText.Text = "";
-            miniwindow.Show();
+            UpdateMiniWindowUI(MiniWindowUIState.open);
         }
 
         private void ShowMiniWindow_UnChecked(object sender, RoutedEventArgs e)
         {
-            ResetMiniWindow.Visibility = Visibility.Collapsed;
-            miniwindow.Hide();
+            UpdateMiniWindowUI(MiniWindowUIState.closed);
+        }
+                
+        public enum MiniWindowUIState { open, closed};
+        public void UpdateMiniWindowUI(MiniWindowUIState state)
+        {
+            switch (state)
+            {
+                case MiniWindowUIState.closed:
+                    ShowMiniWindow.IsChecked = false;
+                    ResetMiniWindow.Visibility = Visibility.Collapsed;
+                    if (miniwindow != null) miniwindow.Hide();
+                    break;
+                case MiniWindowUIState.open:
+                    ShowMiniWindow.IsChecked = true;
+                    ResetMiniWindow.Visibility = Visibility.Visible;
+                    miniwindow = new MiniWindow();
+                    miniwindow.Closing += Miniwindow_Closing;
+                    miniwindow.Show();
+                    break;
+                default: 
+                    break;
+            }
         }
 
+        private void Miniwindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            UpdateMiniWindowUI(MiniWindowUIState.closed);
+        }
     }
 
     [DataContract]

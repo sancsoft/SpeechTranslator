@@ -24,23 +24,23 @@ namespace SpeechTranslator
         public MiniWindow()
         {
             InitializeComponent();
-            this.SizeChanged += MiniWindow_SizeChanged;
-            this.Closing += MiniWindow_Closing;
+            SizeChanged += MiniWindow_SizeChanged;
+            Closing += MiniWindow_Closing;
 
             // Restore the window size and position
-            this.Height = (Properties.Settings.Default.MiniWindow_Height > 5) ? Properties.Settings.Default.MiniWindow_Height : 100;
-            this.Width = (Properties.Settings.Default.MiniWindow_Width > 5) ? Properties.Settings.Default.MiniWindow_Width : 400;
-            this.Left = Properties.Settings.Default.MiniWindow_Left;
-            this.Top = Properties.Settings.Default.MiniWindow_Top;
+            Height = (Properties.Settings.Default.MiniWindow_Height > 5) ? Properties.Settings.Default.MiniWindow_Height : 100;
+            Width = (Properties.Settings.Default.MiniWindow_Width > 5) ? Properties.Settings.Default.MiniWindow_Width : 400;
+            Left = Properties.Settings.Default.MiniWindow_Left;
+            Top = Properties.Settings.Default.MiniWindow_Top;
         }
 
         private void MiniWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // Save the window size and position
-            Properties.Settings.Default.MiniWindow_Height = (int) this.Height;
-            Properties.Settings.Default.MiniWindow_Width = (int) this.Width;
-            Properties.Settings.Default.MiniWindow_Left = (int) this.Left;
-            Properties.Settings.Default.MiniWindow_Top = (int) this.Top;
+            Properties.Settings.Default.MiniWindow_Height = (int)Height;
+            Properties.Settings.Default.MiniWindow_Width = (int)Width;
+            Properties.Settings.Default.MiniWindow_Left = (int)Left;
+            Properties.Settings.Default.MiniWindow_Top = (int)Top;
         }
 
         private void MiniWindow_SizeChanged(object sender, SizeChangedEventArgs e)
