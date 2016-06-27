@@ -1168,7 +1168,7 @@ namespace SpeechTranslator
             miniwindow.Width = rect.Width;
             miniwindow.Left = rect.Left;
             miniwindow.Top = rect.Bottom - miniwindow.Height;
-            SetMessage(string.Format("rect.Bottom: {0}, Width: {1}", rect.Bottom, rect.Width), string.Format("miniwindow.Top: {0} miniwindow.Left: {1}", miniwindow.Top, miniwindow.Left), MessageKind.Status);
+            //SetMessage(string.Format("rect.Bottom: {0}, Width: {1}", rect.Bottom, rect.Width), string.Format("miniwindow.Top: {0} miniwindow.Left: {1}", miniwindow.Top, miniwindow.Left), MessageKind.Status);
             screennumber++;
             Focus();
         }

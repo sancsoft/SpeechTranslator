@@ -14,12 +14,23 @@
 		<Feature Id="ProductFeature" Title="Microsoft Speech Translator" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
 		</Feature>
-    <WixVariable Id="WixUILicenseRtf" Value="licence.rtf"/>
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf"/>
     <Property Id="ARPPRODUCTICON" Value="SpeechTranslator_48.ico" />
     <Feature Id="Addins" Title="Addins" Level="1">
       <ComponentRef Id="ApplicationShortcut" />
     </Feature>
-    
+  
+    <UI>
+      <UIRef Id="WixUI_Minimal" />
+      <Publish Dialog="ExitDialog"
+          Control="Finish" 
+          Event="DoAction" 
+          Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Run Microsoft Speech Translator" />
+    <Property Id="WixShellExecTarget" Value="[INSTALLFOLDER]SpeechTranslator.exe" />
+    <CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+
   </Product>
 
 	<Fragment>
