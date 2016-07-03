@@ -40,7 +40,7 @@
             <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <ComboBox x:Name="ToLanguage" HorizontalAlignment="Left" VerticalAlignment="Center" Width="200" SelectionChanged="ToLanguage_SelectionChanged"/>
                 <CheckBox x:Name="ShowMiniWindow" Content="Show Subtitles" VerticalAlignment="Center" Margin="10,0,0,0" Checked="ShowMiniWindow_Checked" Unchecked="ShowMiniWindow_UnChecked"/>
-                <Label Content="# of lines:" VerticalAlignment="Center" Margin="20,0,0,0"/>
+                <Label x:Name="NoOfLines" Content="# of lines:" VerticalAlignment="Center" Margin="20,0,0,0"/>
                 <ComboBox x:Name="MiniWindow_Lines" Width="Auto" SelectionChanged="MiniWindow_Lines_SelectionChanged"/>
                 <Button x:Name="ResetMiniWindow" Height="20" Width="180" Content="Auto-position Subtitle Window" Background="#FFACACAC" Margin="20,0" VerticalAlignment="Center" HorizontalAlignment="Right" Click="ResetMiniWindow_Click"/>
             </StackPanel>

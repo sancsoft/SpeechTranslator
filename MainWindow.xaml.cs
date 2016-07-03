@@ -99,6 +99,8 @@ namespace SpeechTranslator
 
         private int screennumber = 0;   //keeps track of the screen # the miniwindow is positioned on
 
+        private int resetcycle = 0;     //keeps track of cycling through the window positions
+
         public MainWindow()
         {
             InitializeComponent();
@@ -558,7 +560,7 @@ namespace SpeechTranslator
             WaveFormat waveFormat = new WaveFormat(16000, 16, 1);
 
             // WaveProvider for incoming TTS
-            // We use a rather large BVufferDuration because we need to be able to hold an entire utterance.
+            // We use a rather large BufferDuration because we need to be able to hold an entire utterance.
             // TTS audio is received in bursts (faster than real-time).
             textToSpeechBytes = 0;
             playerTextToSpeechWaveProvider = new BufferedWaveProvider(waveFormat);
@@ -1149,12 +1151,17 @@ namespace SpeechTranslator
         {
             Screen[] screens = Screen.AllScreens;
             System.Drawing.Rectangle rect = new System.Drawing.Rectangle();
-            if (screennumber >= screens.Length) screennumber = 0;
+            if (screennumber >= screens.Length)
+            {
+                screennumber = 0;
+                resetcycle++;
+            }
             rect = screens[screennumber].Bounds;
             miniwindow.Height = Math.Abs(rect.Height / 8);
             miniwindow.Width = rect.Width;
             miniwindow.Left = rect.Left;
-            miniwindow.Top = rect.Bottom - miniwindow.Height;
+            if ((resetcycle % 2) == 0) miniwindow.Top = rect.Bottom - miniwindow.Height;
+            else miniwindow.Top = rect.Top;
             //SetMessage(string.Format("rect.Bottom: {0}, Width: {1}", rect.Bottom, rect.Width), string.Format("miniwindow.Top: {0} miniwindow.Left: {1}", miniwindow.Top, miniwindow.Left), MessageKind.Status);
             screennumber++;
             Focus();
@@ -1178,11 +1185,15 @@ namespace SpeechTranslator
                 case MiniWindowUIState.closed:
                     ShowMiniWindow.IsChecked = false;
                     ResetMiniWindow.Visibility = Visibility.Collapsed;
+                    NoOfLines.Visibility = Visibility.Collapsed;
+                    MiniWindow_Lines.Visibility = Visibility.Collapsed;
                     if (miniwindow != null) miniwindow.Hide();
                     break;
                 case MiniWindowUIState.open:
                     ShowMiniWindow.IsChecked = true;
                     ResetMiniWindow.Visibility = Visibility.Visible;
+                    NoOfLines.Visibility = Visibility.Visible;
+                    MiniWindow_Lines.Visibility = Visibility.Visible;
                     if (miniwindow != null) {
                         miniwindow.Show();
                     }
