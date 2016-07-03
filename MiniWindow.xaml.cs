@@ -1,16 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace SpeechTranslator
 {
@@ -26,6 +15,7 @@ namespace SpeechTranslator
             InitializeComponent();
             SizeChanged += MiniWindow_SizeChanged;
             Closing += MiniWindow_Closing;
+            LocationChanged += MiniWindow_LocationChanged;
 
             // Restore the window size and position
             Height = (Properties.Settings.Default.MiniWindow_Height > 5) ? Properties.Settings.Default.MiniWindow_Height : 100;
@@ -33,6 +23,11 @@ namespace SpeechTranslator
             Left = Properties.Settings.Default.MiniWindow_Left;
             Top = Properties.Settings.Default.MiniWindow_Top;
             SetFontSize(Properties.Settings.Default.MiniWindow_Lines);
+        }
+
+        private void MiniWindow_LocationChanged(object sender, EventArgs e)
+        {
+            DisplayText.Text = "Top: " + Top + " Left: " + Left + " Bottom: " + Top + Height;
         }
 
         private void MiniWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)

@@ -95,7 +95,7 @@ namespace SpeechTranslator
             public string DisplayName { get; set; }
         }
 
-        private MiniWindow miniwindow;
+        private MiniWindow miniwindow = new MiniWindow();
 
         private int screennumber = 0;   //keeps track of the screen # the miniwindow is positioned on
 
@@ -105,6 +105,7 @@ namespace SpeechTranslator
             Debug.Print("This is a debug message");
 
             Closing += MainWindow_Closing;
+            if (miniwindow != null) miniwindow.Closing += Miniwindow_Closing;
 
             int waveInDevices = WaveIn.DeviceCount; //how many recording devices are there on the device
             for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++) //loop through and find all of the devices
@@ -140,14 +141,8 @@ namespace SpeechTranslator
 
             
             ShowMiniWindow.IsChecked = Properties.Settings.Default.ShowMiniWindow;
-            if (ShowMiniWindow.IsChecked.Value)
-            {
-                UpdateMiniWindowUI(MiniWindowUIState.open);
-            }
-            else
-            {
-                UpdateMiniWindowUI(MiniWindowUIState.closed);
-            }
+            if (ShowMiniWindow.IsChecked.Value) UpdateMiniWindowUI(MiniWindowUIState.open);
+            else UpdateMiniWindowUI(MiniWindowUIState.closed);
 
             FeatureTTS.IsChecked = Properties.Settings.Default.TTS;
             CutInputAudioCheckBox.IsChecked = Properties.Settings.Default.CutInputDuringTTS;
@@ -296,7 +291,6 @@ namespace SpeechTranslator
             var voiceCombo = this.Voice;
             this.UpdateVoiceComboBox(voiceCombo, ToLanguage.SelectedItem as ComboBoxItem);
             string code = ((ComboBoxItem)this.ToLanguage.SelectedItem).Tag.ToString();
-            if (miniwindow == null) miniwindow = new MiniWindow();
             miniwindow.DisplayText.Language = System.Windows.Markup.XmlLanguage.GetLanguage(code);
             bool LTR;
             isLTR.TryGetValue(code, out LTR);
@@ -506,12 +500,6 @@ namespace SpeechTranslator
 
             Stopwatch watch = Stopwatch.StartNew();
             UpdateUiState(UiState.Connecting);
-
-            if (ShowMiniWindow.IsChecked.Value)
-            {
-                if (miniwindow == null) miniwindow = new MiniWindow();
-                miniwindow.Show();
-            }
 
             //This section is putting default values in case there are missing values in the UI
             // Minimal validation
@@ -1153,7 +1141,6 @@ namespace SpeechTranslator
 
         private void MiniWindow_Lines_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (miniwindow == null) miniwindow = new MiniWindow();
             miniwindow.SetFontSize(MiniWindow_Lines.SelectedIndex);
             Properties.Settings.Default.MiniWindow_Lines = MiniWindow_Lines.SelectedIndex;
         }
@@ -1196,12 +1183,15 @@ namespace SpeechTranslator
                 case MiniWindowUIState.open:
                     ShowMiniWindow.IsChecked = true;
                     ResetMiniWindow.Visibility = Visibility.Visible;
-                    if (miniwindow == null)
+                    if (miniwindow != null) {
+                        miniwindow.Show();
+                    }
+                    else
                     {
                         miniwindow = new MiniWindow();
                         miniwindow.Closing += Miniwindow_Closing;
+                        miniwindow.Show();
                     }
-                    miniwindow.Show();
                     break;
                 default: 
                     break;
@@ -1213,6 +1203,9 @@ namespace SpeechTranslator
             UpdateMiniWindowUI(MiniWindowUIState.closed);
             miniwindow.Closing -= Miniwindow_Closing;
             miniwindow.Close();
+            miniwindow = new MiniWindow();
+            miniwindow.Closing += Miniwindow_Closing;
+            miniwindow.Hide();
         }
     }
 
