@@ -108,6 +108,7 @@ namespace SpeechTranslator
 
             Closing += MainWindow_Closing;
             if (miniwindow != null) miniwindow.Closing += Miniwindow_Closing;
+            this.PreviewKeyDown += MainWindow_PreviewKeyDown;
 
             int waveInDevices = WaveIn.DeviceCount; //how many recording devices are there on the device
             for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++) //loop through and find all of the devices
@@ -153,6 +154,11 @@ namespace SpeechTranslator
 
             UpdateLanguageSettings(); 
 
+        }
+
+        private void MainWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.F5) UpdateLanguageSettings();
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
