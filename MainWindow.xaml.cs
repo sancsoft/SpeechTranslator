@@ -172,17 +172,16 @@ namespace SpeechTranslator
 
         private void UpdateLanguageSettings() //this function gets the language list from service by calling updatelanguagesettingsasync that method calls the api
         {
+            Task<bool> checkcredentialsTask = IsValidCredentialsAsync();
             UpdateUiState(UiState.GettingLanguageList); //call to method defined in this file near the end
             UpdateLanguageSettingsAsync().ContinueWith(async (t) =>
                 {
-                    Task<bool> checkcredentialsTask = IsValidCredentialsAsync();
                     var state = UiState.ReadyToConnect;
                     if (t.IsFaulted || t.IsCanceled)
                     {
                         state = UiState.MissingLanguageList;
                         this.Log(t.Exception, "E: Failed to get language list: {0}", t.IsCanceled ? "Timeout" : "");
                     }
-                    this.SafeInvoke(() => { UpdateUiState(state); });
                     if (await checkcredentialsTask) SafeInvoke(() => UpdateUiState(state));
                     else SafeInvoke(() => UpdateUiState(UiState.InvalidCredentials));
                 });
@@ -1155,9 +1154,10 @@ namespace SpeechTranslator
             sw.Closing += SettingsWindowClosing;
         }
 
-        private void SettingsWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        private async void SettingsWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            UpdateUiState(UiState.ReadyToConnect);
+            if (await IsValidCredentialsAsync()) UpdateUiState(UiState.ReadyToConnect);
+            else UpdateUiState(UiState.InvalidCredentials);
         }
 
         private void Speaker_SelectionChanged(object sender, SelectionChangedEventArgs e)
