@@ -270,9 +270,9 @@ namespace SpeechTranslator
                     string displayName = languageDetails["name"].ToString();
                     textLanguages.Add(code, displayName);
 
-                    string direction = languageDetails["dir"].ToString().ToLower();
+                    string direction = languageDetails["dir"].ToString().ToLowerInvariant();
                     bool LTR = true;
-                    if (direction == "rtl") LTR = false;
+                    if (direction.ToLowerInvariant() == "rtl") LTR = false;
                     isLTR.Add(code, LTR);
                 }
 
@@ -1199,15 +1199,12 @@ namespace SpeechTranslator
                     ResetMiniWindow.Visibility = Visibility.Visible;
                     NoOfLines.Visibility = Visibility.Visible;
                     MiniWindow_Lines.Visibility = Visibility.Visible;
-                    if (miniwindow != null) {
-                        miniwindow.Show();
-                    }
-                    else
+                    if (miniwindow == null)
                     {
                         miniwindow = new MiniWindow();
                         miniwindow.Closing += Miniwindow_Closing;
-                        miniwindow.Show();
                     }
+                    miniwindow.Show();
                     break;
                 default: 
                     break;
