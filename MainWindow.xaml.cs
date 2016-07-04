@@ -151,7 +151,8 @@ namespace SpeechTranslator
             FeaturePartials.IsChecked = Properties.Settings.Default.PartialResults;
             Voice.SelectedIndex = Properties.Settings.Default.VoiceIndex;
 
-            UpdateLanguageSettings(); //call a function with no arguments
+            UpdateLanguageSettings(); 
+
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -172,8 +173,9 @@ namespace SpeechTranslator
         private void UpdateLanguageSettings() //this function gets the language list from service by calling updatelanguagesettingsasync that method calls the api
         {
             UpdateUiState(UiState.GettingLanguageList); //call to method defined in this file near the end
-            UpdateLanguageSettingsAsync().ContinueWith((t) =>
+            UpdateLanguageSettingsAsync().ContinueWith(async (t) =>
                 {
+                    Task<bool> checkcredentialsTask = IsValidCredentialsAsync();
                     var state = UiState.ReadyToConnect;
                     if (t.IsFaulted || t.IsCanceled)
                     {
@@ -181,6 +183,8 @@ namespace SpeechTranslator
                         this.Log(t.Exception, "E: Failed to get language list: {0}", t.IsCanceled ? "Timeout" : "");
                     }
                     this.SafeInvoke(() => { UpdateUiState(state); });
+                    if (await checkcredentialsTask) SafeInvoke(() => UpdateUiState(state));
+                    else SafeInvoke(() => UpdateUiState(UiState.InvalidCredentials));
                 });
         }
 
@@ -194,7 +198,6 @@ namespace SpeechTranslator
 
         private async Task UpdateLanguageSettingsAsync() //build the URI for the call to get the languages - 
         {
-            
             Uri baseUri = new Uri("https://" + baseUrl);
             Uri fullUri = new Uri(baseUri, "/Languages?api-version=1.0&scope=text,speech,tts");
 
@@ -299,7 +302,7 @@ namespace SpeechTranslator
             this.UpdateVoiceComboBox(voiceCombo, ToLanguage.SelectedItem as ComboBoxItem);
             string code = ((ComboBoxItem)this.ToLanguage.SelectedItem).Tag.ToString();
             miniwindow.DisplayText.Language = System.Windows.Markup.XmlLanguage.GetLanguage(code);
-            bool LTR;
+            bool LTR = true;
             isLTR.TryGetValue(code, out LTR);
             if (LTR)
             {
@@ -325,7 +328,7 @@ namespace SpeechTranslator
             string code = ((ComboBoxItem)this.FromLanguage.SelectedItem).Tag.ToString();
             fromLanguages.TryGetValue(code, out code);  //map fully specified language code "en-us" to simple language code "en"
             bool LTR = true;
-            isLTR.TryGetValue(code, out LTR);
+            if (isLTR.Count > 1) isLTR.TryGetValue(code, out LTR);
             if (LTR)
             {
                 DialogRecognition.FlowDirection = System.Windows.FlowDirection.LeftToRight;
@@ -488,6 +491,20 @@ namespace SpeechTranslator
                 UpdateUiState(UiState.InvalidCredentials);
             }
         }
+
+        private async Task<bool> IsValidCredentialsAsync()
+        {
+            // Authenticate
+            string admClientId = Properties.Settings.Default.ClientID;
+            string admClientSecret = Properties.Settings.Default.ClientSecret;
+            string ADMScope = "http://api.microsofttranslator.com";
+            string ADMTokenUri = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13";
+            ADMToken ADMAuthenticator = new ADMToken(ADMTokenUri, ADMScope);
+            string token = await ADMAuthenticator.GetToken(admClientId, admClientSecret);
+            if (token.Length>10) return true;
+            else return false;
+        }
+
 
         private bool IsMissingInput(object item, string name)
         {
@@ -1080,7 +1097,9 @@ namespace SpeechTranslator
                     isInputAllowed = false;
                     break;
                 case UiState.InvalidCredentials:
-                    SetMessage(String.Format("Please enter ClientID and Secret in the Account Settings."), "", MessageKind.Error);
+                    this.StartListening.IsEnabled = false;
+                    this.SetMessage(string.Format("Please enter your client ID and secret in the account settings."), "", MessageKind.Error);
+                    isInputAllowed = true;
                     break;
                 default:
                     break;
