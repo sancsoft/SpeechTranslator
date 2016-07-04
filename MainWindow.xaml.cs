@@ -63,7 +63,7 @@ namespace SpeechTranslator
 
         private int audioBytesSent = 0;
 
-        private BinaryMessageDecoder audioReceived; //BianryMessageDecoder is a testutils class
+        private BinaryMessageDecoder audioReceived; //BinaryMessageDecoder is a testutils class
 
         private string correlationId;
 
@@ -258,7 +258,8 @@ namespace SpeechTranslator
                 FromLanguage.Items.Clear();
                 foreach (var language in spokenLanguages)
                 {
-                    FromLanguage.Items.Add(new ComboBoxItem() { Content = language.Value, Tag = language.Key});
+                    bool isSelected = (CultureInfo.CurrentUICulture.Name.Equals(language.Key, StringComparison.OrdinalIgnoreCase)) ? true : false;
+                    FromLanguage.Items.Add(new ComboBoxItem() { Content = language.Value, Tag = language.Key, IsSelected = isSelected});
                 }
 
                 // Gather the set of text translation languages
@@ -282,9 +283,13 @@ namespace SpeechTranslator
                     ToLanguage.Items.Add(new ComboBoxItem() { Content = language.Value, Tag = language.Key });
                 }
 
-
-                ToLanguage.SelectedIndex = Properties.Settings.Default.ToLanguageIndex;
-                FromLanguage.SelectedIndex = Properties.Settings.Default.FromLanguageIndex;
+                if (Properties.Settings.Default.FromLanguageIndex >= 0) FromLanguage.SelectedIndex = Properties.Settings.Default.FromLanguageIndex;
+                if (Properties.Settings.Default.ToLanguageIndex >= 0) ToLanguage.SelectedIndex = Properties.Settings.Default.ToLanguageIndex;
+                else
+                {
+                    Random rnd = new Random(DateTime.Now.Millisecond);
+                    ToLanguage.SelectedIndex = (rnd.Next() % textLanguages.Count);
+                }
             }
         }
 
