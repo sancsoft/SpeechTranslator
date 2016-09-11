@@ -151,6 +151,7 @@ namespace SpeechTranslator
             CutInputAudioCheckBox.IsChecked = Properties.Settings.Default.CutInputDuringTTS;
             FeaturePartials.IsChecked = Properties.Settings.Default.PartialResults;
             Voice.SelectedIndex = Properties.Settings.Default.VoiceIndex;
+            MenuItem_Experimental.IsChecked = Properties.Settings.Default.ExperimentalLanguages;
 
             UpdateLanguageSettings(); 
 
