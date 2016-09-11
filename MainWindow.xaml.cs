@@ -172,6 +172,7 @@ namespace SpeechTranslator
             Properties.Settings.Default.PartialResults = FeaturePartials.IsChecked.Value;
             Properties.Settings.Default.ToLanguageIndex = ToLanguage.SelectedIndex;
             Properties.Settings.Default.VoiceIndex = Voice.SelectedIndex;
+            Properties.Settings.Default.ExperimentalLanguages = MenuItem_Experimental.IsChecked;
             Properties.Settings.Default.Save();
             Environment.Exit(0);
         }
@@ -204,7 +205,9 @@ namespace SpeechTranslator
         private async Task UpdateLanguageSettingsAsync() //build the URI for the call to get the languages - 
         {
             Uri baseUri = new Uri("https://" + baseUrl);
-            Uri fullUri = new Uri(baseUri, "/Languages?api-version=1.0&scope=text,speech,tts");
+            string fullUriString = "/Languages?api-version=1.0&scope=text,speech,tts";
+            if (MenuItem_Experimental.IsChecked) fullUriString += "&flight=experimental";            
+            Uri fullUri = new Uri(baseUri, fullUriString);
 
             using (HttpClient client = new HttpClient()) //'client' is the var - using statement ensures the dispose method is used even after an exception.
             {
@@ -582,6 +585,7 @@ namespace SpeechTranslator
             options.CorrelationId = this.correlationId;
             options.Features = GetFeatures().ToString().Replace(" ", "");
             options.Profanity = ((SpeechClient.ProfanityFilter)Enum.Parse(typeof(SpeechClient.ProfanityFilter), ((ComboBoxItem)this.Profanity.SelectedItem).Tag.ToString(), true)).ToString();
+            options.Experimental = MenuItem_Experimental.IsChecked;
 
             // Setup player and recorder but don't start them yet.
             WaveFormat waveFormat = new WaveFormat(16000, 16, 1);
@@ -1153,13 +1157,6 @@ namespace SpeechTranslator
             }
         }
 
-        private void SettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            SettingsWindow sw = new SettingsWindow();
-            sw.Show();
-            sw.Closing += SettingsWindowClosing;
-        }
-
         private async void SettingsWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (await IsValidCredentialsAsync()) UpdateUiState(UiState.ReadyToConnect);
@@ -1245,6 +1242,27 @@ namespace SpeechTranslator
             miniwindow.Closing += Miniwindow_Closing;
             miniwindow.Hide();
         }
+        private void MenuItem_Experimental_Checked(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.ExperimentalLanguages = true;
+        }
+        private void MenuItem_Experimental_Unchecked(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.ExperimentalLanguages = false;
+        }
+
+        private void MenuItem_FileExit_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow_Closing(sender, null);
+        }
+
+        private void MenuItem_SettingsAccount_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow sw = new SettingsWindow();
+            sw.Show();
+            sw.Closing += SettingsWindowClosing;
+        }
+
     }
 
     [DataContract]

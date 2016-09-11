@@ -108,6 +108,10 @@ namespace Microsoft.MT.Api.TestUtils
             {
                 query.AppendFormat("&profanity={0}", options.Profanity);
             }
+            if (options.Experimental)
+            {
+                query.AppendFormat("&flight={0}", "experimental");
+            }
             this.clientWsUri = new Uri(string.Format("{0}://{1}/speech/translate?{2}&api-version=1.0", "wss", this.Hostname, query.ToString()));
         }
 
