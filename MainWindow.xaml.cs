@@ -178,10 +178,13 @@ namespace SpeechTranslator
             Environment.Exit(0);
         }
 
-        private void UpdateLanguageSettings() //this function gets the language list from service by calling updatelanguagesettingsasync that method calls the api
+        /// <summary>
+        /// Retrieve the language names and IDs from the Translator service
+        /// </summary>
+        private void UpdateLanguageSettings()
         {
             Task<bool> checkcredentialsTask = IsValidCredentialsAsync();
-            UpdateUiState(UiState.GettingLanguageList); //call to method defined in this file near the end
+            UpdateUiState(UiState.GettingLanguageList);
             UpdateLanguageSettingsAsync().ContinueWith(async (t) =>
                 {
                     var state = UiState.ReadyToConnect;
@@ -203,7 +206,7 @@ namespace SpeechTranslator
             return keys.First();
         }
 
-        private async Task UpdateLanguageSettingsAsync() //build the URI for the call to get the languages - 
+        private async Task UpdateLanguageSettingsAsync()
         {
             Uri baseUri = new Uri("https://" + baseUrl);
             string fullUriString = "/Languages?api-version=1.0&scope=text,speech,tts";
@@ -222,7 +225,7 @@ namespace SpeechTranslator
                 //request.Headers.Add("X-ClientTraceId", traceId);
                 //Debug.Print("TraceId: {0}", traceId);
 
-                client.Timeout = TimeSpan.FromMilliseconds(5000);
+                client.Timeout = TimeSpan.FromMilliseconds(10000);
                 HttpResponseMessage response = await client.SendAsync(request); //make the async call to the web using the client var and passing the built up URI
                 response.EnsureSuccessStatusCode(); //causes exception if the return is false
 
@@ -799,7 +802,7 @@ namespace SpeechTranslator
                     }
                     else
                     {
-                        this.Log("I: Disconnected.");
+                        this.Log("I: Disconnected. cid='{0}'", correlationId);
                     }
                     this.SafeInvoke(() => {
                         this.AutoSaveLogs();
