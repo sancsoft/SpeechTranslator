@@ -542,11 +542,10 @@ namespace SpeechTranslator
             if (IsMissingInput(FromLanguage.SelectedItem, "source language")) return;
             if (IsMissingInput(ToLanguage.SelectedItem, "target language")) return;
             //if (this.IsMissingInput(this.Voice.SelectedItem, "voice")) return;
-            if (IsMissingInput(Profanity.SelectedItem, "profanity filter")) return;
             if (IsMissingInput(Mic.SelectedItem, "microphone")) return;
             if (IsMissingInput(Speaker.SelectedItem, "speaker")) return;
 
-            if (LogAutoSave.IsChecked.Value)
+            if (LogAutoSave.IsChecked)
             {
                 autoSaveFrom = Logs.Items.Count;
             }
@@ -588,7 +587,7 @@ namespace SpeechTranslator
             options.ClientAppId = new Guid("EA66703D-90A8-436B-9BD6-7A2707A2AD99");
             options.CorrelationId = this.correlationId;
             options.Features = GetFeatures().ToString().Replace(" ", "");
-            options.Profanity = ((SpeechClient.ProfanityFilter)Enum.Parse(typeof(SpeechClient.ProfanityFilter), ((ComboBoxItem)this.Profanity.SelectedItem).Tag.ToString(), true)).ToString();
+            options.Profanity = ((SpeechClient.ProfanityFilter)Enum.Parse(typeof(SpeechClient.ProfanityFilter), GetProfanityLevel(), true)).ToString();
             options.Experimental = MenuItem_Experimental.IsChecked;
 
             // Setup player and recorder but don't start them yet.
@@ -629,7 +628,7 @@ namespace SpeechTranslator
             this.audioBytesSent = 0;
 
             string logAudioFileName = null;
-            if (LogSentAudio.IsChecked.Value || LogReceivedAudio.IsChecked.Value)
+            if (LogSentAudio.IsChecked|| LogReceivedAudio.IsChecked)
             {
                 string logAudioPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), Properties.Settings.Default.OutputDirectory);
                 try
@@ -641,12 +640,12 @@ namespace SpeechTranslator
                     this.AddItemToLog(string.Format("Could not create folder {0}", logAudioPath));
                 }
 
-                if (LogSentAudio.IsChecked.Value)
+                if (LogSentAudio.IsChecked)
                 {
                     logAudioFileName = System.IO.Path.Combine(logAudioPath, string.Format("audiosent_{0}.wav", this.correlationId));
                 }
 
-                if (LogReceivedAudio.IsChecked.Value)
+                if (LogReceivedAudio.IsChecked)
                 {
                     string fmt = System.IO.Path.Combine(logAudioPath, string.Format("audiotts_{0}_{{0}}.wav", this.correlationId));
                     this.audioReceived = new BinaryMessageDecoder(fmt);
@@ -853,7 +852,7 @@ namespace SpeechTranslator
 
         private void AutoSaveLogs()
         {
-            if (this.LogAutoSave.IsChecked.Value == false)
+            if (this.LogAutoSave.IsChecked == false)
             {
                 return;
             }
@@ -1142,8 +1141,8 @@ namespace SpeechTranslator
             this.Profanity.IsEnabled = isInputAllowed;
             this.ShowMiniWindow.IsEnabled = isInputAllowed;
 
-            this.SaveLogs.IsEnabled = isInputAllowed;
-            this.ClearLogs.IsEnabled = true;
+            this.MenuItem_SaveLogs.IsEnabled = isInputAllowed;
+            this.MenuItem_ClearLogs.IsEnabled = true;
             this.LogAutoSave.IsEnabled = isInputAllowed;
             this.LogSentAudio.IsEnabled = isInputAllowed;
             this.LogReceivedAudio.IsEnabled = isInputAllowed;
@@ -1267,6 +1266,32 @@ namespace SpeechTranslator
             sw.Closing += SettingsWindowClosing;
         }
 
+        private void MenuItem_Profanity_Checked(object sender, RoutedEventArgs e)
+        {
+            System.Windows.Controls.MenuItem mi = (System.Windows.Controls.MenuItem)sender;
+            switch (mi.Tag.ToString())
+            {
+                case "off":
+                    Profanity_moderate.IsChecked = false;
+                    Profanity_strict.IsChecked = false;
+                    break;
+                case "moderate":
+                    Profanity_off.IsChecked = false;
+                    Profanity_strict.IsChecked = false;
+                    break;
+                case "strict":
+                    Profanity_off.IsChecked = false;
+                    Profanity_moderate.IsChecked = false;
+                    break;
+            }
+        }
+
+        private string GetProfanityLevel()
+        {
+            if (Profanity_off.IsChecked) return "off";
+            if (Profanity_moderate.IsChecked) return "moderate";
+            return "strict";
+        }
     }
 
     [DataContract]

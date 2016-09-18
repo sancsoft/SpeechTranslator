@@ -7,7 +7,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
-            <RowDefinition Height="260" />
+            <RowDefinition Height="215" />
             <RowDefinition Height="170" />
             <RowDefinition  />
         </Grid.RowDefinitions>
@@ -19,6 +19,18 @@
                 <MenuItem Header="_Settings">
                     <MenuItem Header="_Account Settings ..." Click="MenuItem_SettingsAccount_Click" />
                     <MenuItem x:Name="MenuItem_Experimental" Header="Show e_xperimental languages" IsCheckable="True" IsChecked="False" Checked="MenuItem_Experimental_Checked" Unchecked="MenuItem_Experimental_Unchecked"/>
+                    <MenuItem x:Name="Profanity" Header="Profanity Filter">
+                        <MenuItem x:Name="Profanity_off" Tag="off" Header="Off" IsCheckable="True" IsChecked="False" Checked="MenuItem_Profanity_Checked"/>
+                        <MenuItem x:Name="Profanity_moderate" Tag="moderate" Header="Moderate" IsCheckable="True" IsChecked="False" Checked="MenuItem_Profanity_Checked"/>
+                        <MenuItem x:Name="Profanity_strict" Tag="strict" IsCheckable="True" IsChecked="True" Header="Strict" Checked="MenuItem_Profanity_Checked"/>
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="_Logs" HorizontalAlignment="Right">
+                    <MenuItem x:Name="MenuItem_SaveLogs"  Header="_Save Logs" Click="SaveLogs_Click" />
+                    <MenuItem x:Name="MenuItem_ClearLogs" Header="_Clear Logs" Click="ClearLogs_Click" />
+                    <MenuItem x:Name="LogAutoSave" Header="Auto-save session log" IsCheckable="True" IsChecked="False" />
+                    <MenuItem x:Name="LogSentAudio" Header="Log audio sent" IsCheckable="True"  IsChecked="False" />
+                    <MenuItem x:Name="LogReceivedAudio" Header="Log audio received (TTS)" IsCheckable="True"  IsChecked="False" />
                 </MenuItem>
             </Menu>
         </DockPanel>
@@ -30,18 +42,17 @@
                 <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
-                <RowDefinition />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="150" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
-            <Label x:Name="AudioBytesSentLabel" Grid.Row="5" Grid.Column="1" Content="000000000" VerticalAlignment="Center" HorizontalAlignment="Right" Width="80"/>
+            <Label x:Name="AudioBytesSentLabel" Grid.Row="2" Grid.Column="1" Content="000000000" VerticalAlignment="Center" HorizontalAlignment="Right" Width="80"/>
             <Label Grid.Row="0" Grid.Column="0" Content="Microphone/File input" VerticalAlignment="Center" />
             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
                 <ComboBox x:Name="Mic" HorizontalAlignment="Left" VerticalAlignment="Center" Width="300" SelectionChanged="Mic_SelectionChanged" />
                 <TextBox x:Name="AudioFileInput" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="400" Height="20" Margin="5"/>
-                <Button x:Name="AudioFileInputButton" Background="#FFACACAC" Grid.Row="0" Grid.Column="1" Content="Select" HorizontalAlignment="Right" Margin="5" VerticalAlignment="Center" Width="60" Height="20" Click="AudioFileInputButton_Click"/>
+                <Button x:Name="AudioFileInputButton" Background="#FFACACAC" Grid.Row="0" Grid.Column="1" Content="Select" HorizontalAlignment="Right" Margin="5" VerticalAlignment="Stretch"  Width="60" Height="20" Click="AudioFileInputButton_Click"/>
             </StackPanel>
             <Label Grid.Row="1" Grid.Column="0" Content="Speaker" VerticalAlignment="Center" />
             <ComboBox x:Name="Speaker" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="300" SelectionChanged="Speaker_SelectionChanged" />
@@ -53,7 +64,7 @@
                 <CheckBox x:Name="ShowMiniWindow" Content="Show Subtitles" VerticalAlignment="Center" Margin="10,0,0,0" Checked="ShowMiniWindow_Checked" Unchecked="ShowMiniWindow_UnChecked"/>
                 <Label x:Name="NoOfLines" Content="# of lines:" VerticalAlignment="Center" Margin="20,0,0,0"/>
                 <ComboBox x:Name="MiniWindow_Lines" Width="Auto" SelectionChanged="MiniWindow_Lines_SelectionChanged"/>
-                <Button x:Name="ResetMiniWindow" Height="20" Width="180" Content="Auto-position Subtitle Window" Background="#FFACACAC" Margin="20,0" VerticalAlignment="Center" HorizontalAlignment="Right" Click="ResetMiniWindow_Click"/>
+                <Button x:Name="ResetMiniWindow" Height="20" Width="180" Content="Auto-position Subtitle Window" Background="#FFACACAC" Margin="20,0" VerticalAlignment="Stretch" HorizontalAlignment="Right" Click="ResetMiniWindow_Click"/>
             </StackPanel>
             <Label x:Name="VoiceLabel" Grid.Row="4" Grid.Column="0" Content="Voice" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center">
@@ -61,35 +72,15 @@
                 <CheckBox x:Name="FeatureTTS" Content="TTS" Margin="10,0,0,0" VerticalAlignment="Center"/>
                 <CheckBox x:Name="CutInputAudioCheckBox" Content="Cut input audio during TTS" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0"/>
                 <CheckBox x:Name="FeaturePartials" Content="Partial Results" Margin="20,0,0,0" VerticalAlignment="Center"/>
-                <Button x:Name="UpdateSettings" Content="Update" Background="#FFACACAC" Margin="20,0" Height="20" Width="60" VerticalAlignment="Center"/>
+                <Button x:Name="UpdateSettings" Content="Update" Background="#FFACACAC" Margin="20,0" Height="20" Width="60" VerticalAlignment="Stretch"/>
             </StackPanel>
-            <Label Grid.Row="5" Grid.Column="0" Content="Profanity Filter" VerticalAlignment="Center" />
-            <ComboBox x:Name="Profanity" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="120">
-                <ComboBoxItem Tag="off">Off</ComboBoxItem>
-                <ComboBoxItem Tag="moderate">Moderate</ComboBoxItem>
-                <ComboBoxItem Tag="strict" IsSelected="True">Strict</ComboBoxItem>
-            </ComboBox>
-            <Grid Grid.Row="6" Grid.RowSpan="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid Grid.Row="5" Grid.RowSpan="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="25" />
                     <RowDefinition  />
                 </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="90" />
-                    <ColumnDefinition Width="90" />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
-                    <Button x:Name="StartListening" Content="Start" Background="#FFACACAC" Margin="0,2" Width="80" Click="StartListening_Click" IsDefault="True" />
-                </StackPanel>
-                <Button x:Name="SaveLogs" Grid.Column="2" Content="Save logs" Background="#FFACACAC" Margin="5,2" Click="SaveLogs_Click" />
-                <Button x:Name="ClearLogs" Grid.Column="3" Content="Clear logs" Background="#FFACACAC" Margin="5,2" Click="ClearLogs_Click" />
-                <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="4">
-                    <CheckBox x:Name="LogAutoSave" Content="Auto-save session log" Margin="5,0,0,0" VerticalAlignment="Center" />
-                    <CheckBox x:Name="LogSentAudio" Content="Log audio sent" Margin="5,0,0,0" IsChecked="False" VerticalAlignment="Center" />
-                    <CheckBox x:Name="LogReceivedAudio" Content="Log audio received (TTS)" Margin="5,0,0,0" VerticalAlignment="Center" />
+                    <Button x:Name="StartListening" Content="Start" Background="#FFACACAC" Margin="0,2" Width="200" Click="StartListening_Click" IsDefault="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                 </StackPanel>
             </Grid>
             <Label x:Name="CutInputAudioLabel" Grid.Row="6" Grid.Column="0" Content="CUTTING INPUT AUDIO" Foreground="Blue" VerticalAlignment="Center" Visibility="Collapsed" />
