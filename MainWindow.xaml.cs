@@ -101,6 +101,24 @@ namespace SpeechTranslator
 
         private int resetcycle = 0;     //keeps track of cycling through the window positions
 
+        Stopwatch stopwatch = new Stopwatch();
+
+        /// <summary>
+        /// Holds one utterance for the transcript
+        /// </summary>
+        private class TranscriptUtterance
+        {
+            public TimeSpan Timespan;
+            public string Recognition;
+            public string Translation;
+        }
+
+        /// <summary>
+        /// Holds the set of utterances in this conversation;
+        /// </summary>
+        private List<TranscriptUtterance> Transcript = new List<TranscriptUtterance>();
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -171,6 +189,7 @@ namespace SpeechTranslator
             Properties.Settings.Default.TTS = FeatureTTS.IsChecked.Value;
             Properties.Settings.Default.CutInputDuringTTS = CutInputAudioCheckBox.IsChecked.Value;
             Properties.Settings.Default.PartialResults = FeaturePartials.IsChecked.Value;
+            Properties.Settings.Default.FromLanguageIndex = FromLanguage.SelectedIndex;
             Properties.Settings.Default.ToLanguageIndex = ToLanguage.SelectedIndex;
             Properties.Settings.Default.VoiceIndex = Voice.SelectedIndex;
             Properties.Settings.Default.ExperimentalLanguages = MenuItem_Experimental.IsChecked;
@@ -332,6 +351,7 @@ namespace SpeechTranslator
             }
             finaltranslationhistory = "";
             miniwindow.DisplayText.Text = "";
+            Transcript.Clear();
         }
 
         private void FromLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -351,6 +371,7 @@ namespace SpeechTranslator
                 DialogRecognition.FlowDirection = System.Windows.FlowDirection.RightToLeft;
                 DialogRecognition.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
             }
+            Transcript.Clear();
         }
 
         private void UpdateVoiceComboBox(System.Windows.Controls.ComboBox voiceComboBox, ComboBoxItem languageSelectedItem)
@@ -408,9 +429,11 @@ namespace SpeechTranslator
             switch (this.currentState)
             {
                 case UiState.ReadyToConnect:
+                    stopwatch.Start();
                     Connect();
                     break;
                 case UiState.Connected:
+                    stopwatch.Stop();
                     Disconnect();
                     break;
                 default:
@@ -459,6 +482,11 @@ namespace SpeechTranslator
                                 Log("Final translation {0}: {1}", final.Id, final.Translation);
                                 SafeInvoke(() => SetMessage(final.Recognition, final.Translation, MessageKind.Chat));
                                 finaltranslationhistory = final.Translation + "\n" + finaltranslationhistory.Substring(0, Math.Min(500, finaltranslationhistory.Length));
+                                TranscriptUtterance utterance = new TranscriptUtterance();
+                                utterance.Recognition = final.Recognition;
+                                utterance.Translation = final.Translation;
+                                utterance.Timespan = stopwatch.Elapsed;
+                                Transcript.Add(utterance);
                             }
                             if (msg.GetType() == typeof(PartialResultMessage))
                             {
@@ -1210,6 +1238,7 @@ namespace SpeechTranslator
         private enum MiniWindowUIState { open, closed};
         private void UpdateMiniWindowUI(MiniWindowUIState state)
         {
+            miniwindow.DisplayText.Text = string.Empty;
             switch (state)
             {
                 case MiniWindowUIState.closed:
@@ -1291,6 +1320,60 @@ namespace SpeechTranslator
             if (Profanity_off.IsChecked) return "off";
             if (Profanity_moderate.IsChecked) return "moderate";
             return "strict";
+        }
+
+        private void MenuItem_SaveTranscript_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog savefiledialog = new SaveFileDialog();
+            savefiledialog.RestoreDirectory = true;
+            savefiledialog.FileName = "Transcript_" + DateTime.Now.ToString("yyMMdd_HHmm") + ".txt";
+            savefiledialog.Filter = "Text Files|*.txt|All files|*.*";
+            if (savefiledialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                string transcriptfilename = Path.ChangeExtension(savefiledialog.FileName, "." + ((ComboBoxItem)FromLanguage.SelectedItem).Tag.ToString() + Path.GetExtension(savefiledialog.FileName));
+                string signature = string.Format("\n\n\nCorrelationId: {0}\n{1}", correlationId, DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+                using (StreamWriter file = new StreamWriter(transcriptfilename, false, Encoding.UTF8))
+                {
+                    foreach (TranscriptUtterance utterance in Transcript)
+                    {
+                        file.WriteLine(utterance.Recognition);
+                    }
+                    file.WriteLine(signature);
+                    file.Close();
+                    using (Process p = new Process())
+                    {
+                        p.StartInfo.FileName = transcriptfilename;
+                        p.Start();
+                    }
+                }
+                if (FromLanguage != ToLanguage)
+                {
+                    string translationfilename = Path.ChangeExtension(savefiledialog.FileName, "." + ((ComboBoxItem)ToLanguage.SelectedItem).Tag.ToString() + Path.GetExtension(savefiledialog.FileName));
+                    using (StreamWriter file = new StreamWriter(translationfilename, false, Encoding.UTF8))
+                    {
+                        foreach (TranscriptUtterance utterance in Transcript)
+                        {
+                            file.WriteLine(utterance.Translation);
+                        }
+                        file.WriteLine(signature);
+                        file.Close();
+                        using (Process p = new Process())
+                        {
+                            p.StartInfo.FileName = translationfilename;
+                            p.Start();
+                        }
+                    }
+
+                }
+            }
+        }
+
+        private void Menu_File_Click(object sender, RoutedEventArgs e)
+        {
+            if (Transcript.Count > 0)
+                MenuItem_SaveTranscript.IsEnabled = true;
+            else
+                MenuItem_SaveTranscript.IsEnabled = false;
         }
     }
 

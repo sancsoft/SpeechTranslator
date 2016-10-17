@@ -13,7 +13,8 @@
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0">
             <Menu DockPanel.Dock="Top">
-                <MenuItem Header="_File">
+                <MenuItem x:Name="Menu_File" Header="_File" SubmenuOpened="Menu_File_Click">
+                    <MenuItem x:Name="MenuItem_SaveTranscript" Header="_Save Transcript" Click="MenuItem_SaveTranscript_Click" IsEnabled="False"/>
                     <MenuItem Header="E_xit" Click="MenuItem_FileExit_Click" />
                 </MenuItem>
                 <MenuItem Header="_Settings">
