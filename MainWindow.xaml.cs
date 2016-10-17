@@ -1346,7 +1346,7 @@ namespace SpeechTranslator
                         p.Start();
                     }
                 }
-                if (FromLanguage != ToLanguage)
+                if (((ComboBoxItem)FromLanguage.SelectedItem).Content == ((ComboBoxItem)ToLanguage.SelectedItem).Content)
                 {
                     string translationfilename = Path.ChangeExtension(savefiledialog.FileName, "." + ((ComboBoxItem)ToLanguage.SelectedItem).Tag.ToString() + Path.GetExtension(savefiledialog.FileName));
                     using (StreamWriter file = new StreamWriter(translationfilename, false, Encoding.UTF8))
