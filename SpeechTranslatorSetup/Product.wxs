@@ -3,7 +3,7 @@
 	<Product Id="*"
            Name="Microsoft Speech Translator"
            Language="1033"
-           Version="0.8.9.0"
+           Version="0.8.9.1"
            Manufacturer="Microsoft Corporation"
            UpgradeCode="fb2306ef-9362-4038-9339-4a11f3c9385a">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
