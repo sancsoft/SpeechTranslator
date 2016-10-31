@@ -79,6 +79,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AzureAuthToken.cs" />
     <Compile Include="MiniWindow.xaml.cs">
       <DependentUpon>MiniWindow.xaml</DependentUpon>
     </Compile>

@@ -1,4 +1,6 @@
 # Speech Translator
+-- Updated for Azure subscriptions --
+
 Translate as you speak, and show a subtitle window on this or on another screen.
 Demo application to show the use of close to real-time translation and transcription.
 

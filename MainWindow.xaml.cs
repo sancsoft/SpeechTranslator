@@ -521,11 +521,8 @@ namespace SpeechTranslator
         {
             // Authenticate
             string admClientId = Properties.Settings.Default.ClientID;
-            string admClientSecret = Properties.Settings.Default.ClientSecret;
-            string ADMScope = "http://api.microsofttranslator.com";
-            string ADMTokenUri = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13";
-            ADMToken ADMAuthenticator = new ADMToken(ADMTokenUri, ADMScope);
-            options.AuthHeaderValue = await ADMAuthenticator.GetToken(admClientId, admClientSecret);
+            Microsoft.Translator.API.AzureAuthToken tokenSource = new Microsoft.Translator.API.AzureAuthToken(admClientId);
+            options.AuthHeaderValue = await tokenSource.GetAccessTokenAsync();
             if (options.AuthHeaderValue.Length < 10)
             {
                 UpdateUiState(UiState.InvalidCredentials);
@@ -536,11 +533,8 @@ namespace SpeechTranslator
         {
             // Authenticate
             string admClientId = Properties.Settings.Default.ClientID;
-            string admClientSecret = Properties.Settings.Default.ClientSecret;
-            string ADMScope = "http://api.microsofttranslator.com";
-            string ADMTokenUri = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13";
-            ADMToken ADMAuthenticator = new ADMToken(ADMTokenUri, ADMScope);
-            string token = await ADMAuthenticator.GetToken(admClientId, admClientSecret);
+            Microsoft.Translator.API.AzureAuthToken tokenSource = new Microsoft.Translator.API.AzureAuthToken(admClientId);
+            string token = await tokenSource.GetAccessTokenAsync();
             if (token.Length>10) return true;
             else return false;
         }
