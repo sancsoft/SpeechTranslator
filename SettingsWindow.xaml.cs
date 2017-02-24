@@ -23,25 +23,23 @@ namespace SpeechTranslator
         {
             InitializeComponent();
             ClientID.Text = Properties.Settings.Default.ClientID;
-            ClientSecret.Text = Properties.Settings.Default.ClientSecret;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             Properties.Settings.Default.ClientID = ClientID.Text;
-            Properties.Settings.Default.ClientSecret = ClientSecret.Text;
             Properties.Settings.Default.Save();
             this.Close();
         }
 
         private void Label_MouseDown_Subscription(object sender, MouseButtonEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://datamarket.azure.com/dataset/bing/microsofttranslatorspeech");
+            System.Diagnostics.Process.Start("http://aka.ms/translatorazure");
         }
 
         private void Label_MouseDown_ClientID(object sender, MouseButtonEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://datamarket.azure.com/developer/applications");
+            System.Diagnostics.Process.Start("http://aka.ms/translatorazure");
         }
 
         private void ObtainSubscription_MouseEnter(object sender, MouseEventArgs e)
