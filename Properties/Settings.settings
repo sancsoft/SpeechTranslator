@@ -60,7 +60,7 @@
       <Value Profile="(Default)">dev.microsofttranslator.us</Value>
     </Setting>
     <Setting Name="AuthMethod" Type="System.String" Scope="User">
-      <Value Profile="(Default)">HMAC</Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

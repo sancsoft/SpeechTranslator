@@ -253,7 +253,7 @@ namespace SpeechTranslator.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("HMAC")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string AuthMethod {
             get {
                 return ((string)(this["AuthMethod"]));
