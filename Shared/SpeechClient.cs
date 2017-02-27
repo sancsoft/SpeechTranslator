@@ -1,19 +1,14 @@
-﻿using Microsoft.MT.Api.TestUtils;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Net.WebSockets;
-using System.Runtime.Serialization;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace Microsoft.MT.Api.TestUtils
 {
@@ -54,6 +49,11 @@ namespace Microsoft.MT.Api.TestUtils
             /// Gets partial speech recognitions (hypotheses)
             /// </summary>
             Partial = 2,
+
+            /// <summary>
+            /// Fast Partial results (every 500ms)
+            /// </summary>
+            FastPartial = 4
         }
 
         /// <summary>
@@ -95,15 +95,79 @@ namespace Microsoft.MT.Api.TestUtils
         /// Queue of messages waiting to be sent.
         private BlockingCollection<QueueItem> outgoingMessageQueue = new BlockingCollection<QueueItem>();
 
+        public static StringBuilder GenerateSpeechClientQuery(SpeechTranslateClientOptions options)
+        {
+            StringBuilder query = new StringBuilder();
+            query.AppendFormat("from={0}&to={1}", options.TranslateFrom, options.TranslateTo);
+            if (!String.IsNullOrWhiteSpace(options.Features))
+            {
+                query.AppendFormat("&features={0}", options.Features);
+            }
+            if (!String.IsNullOrWhiteSpace(options.Voice))
+            {
+                query.AppendFormat("&voice={0}", options.Voice);
+            }
+
+            if (!String.IsNullOrWhiteSpace(options.Profanity))
+            {
+                query.AppendFormat("&profanity={0}", options.Profanity);
+            }
+
+            if (!String.IsNullOrWhiteSpace(options.ProfanityAction))
+            {
+                query.AppendFormat("&profanityaction={0}", options.ProfanityAction);
+            }
+
+            if (!String.IsNullOrWhiteSpace(options.ApiVersion))
+            {
+                query.AppendFormat("&api-version={0}", options.ApiVersion);
+            }
+
+            if (!String.IsNullOrWhiteSpace(options.ProfanityMarker))
+            {
+                query.AppendFormat("&profanitymarker={0}", options.ProfanityMarker);
+            }
+
+            var flightParam = SpeechClient.SetFlightParam(options.UseExperimentalLanguages, options.UseAppLanguages);
+
+            if (!String.IsNullOrEmpty(flightParam))
+            {
+                query.Append(flightParam);
+            }
+
+            if (string.IsNullOrEmpty(options.ClientTraceId))
+            {
+                options.ClientTraceId = Guid.NewGuid().ToString();
+            }
+            query.AppendFormat("&x-clientTraceId={0}", options.ClientTraceId);
+
+
+            if (!String.IsNullOrWhiteSpace(options.AccessToken))
+            {
+                //url encode the token if sent as query string parameter
+                query.AppendFormat("&access_token={0}", HttpUtility.UrlEncode(options.AccessToken));
+            }
+
+            return query;
+        }
+
         public SpeechClient(SpeechTranslateClientOptions options, CancellationToken cancellationToken)
         {
             this.Init(options, cancellationToken);
+            StringBuilder query = GenerateSpeechClientQuery(options);
+            this.clientWsUri = new Uri(string.Format("{0}://{1}/{2}?{3}", this.options.IsSecure ? "wss": "ws", this.Hostname, options.Path, query.ToString()));
+            this.SetHMACSignature();
+        }
+
+        public SpeechClient(SpeechDetectAndTranslateClientOptions options, CancellationToken cancellationToken)
+        {
+            this.Init(options, cancellationToken);
             StringBuilder query = new StringBuilder();
-            if (options.TranslateTo == "yue")
-                //Skip setting the voice in case of yue (Cantonese). Server side bug.
-                query.AppendFormat("from={0}&to={1}", options.TranslateFrom, options.TranslateTo);
-            else
-                query.AppendFormat("from={0}&to={1}&voice={2}", options.TranslateFrom, options.TranslateTo, options.Voice);
+            query.AppendFormat("languages={0}", string.Join(",", options.Languages).Replace(" ", ""));
+            if ((options.Voices != null) && (options.Voices.Length > 0))
+            {
+                query.AppendFormat("&voices={0}", string.Join(",", options.Voices).Replace(" ", ""));
+            }
             if (!String.IsNullOrWhiteSpace(options.Features))
             {
                 query.AppendFormat("&features={0}", options.Features);
@@ -112,13 +176,9 @@ namespace Microsoft.MT.Api.TestUtils
             {
                 query.AppendFormat("&profanity={0}", options.Profanity);
             }
-            if (options.Experimental)
-            {
-                query.AppendFormat("&flight={0}", "experimental");
-            }
-            this.clientWsUri = new Uri(string.Format("{0}://{1}/speech/translate?{2}&api-version=1.0", "wss", this.Hostname, query.ToString()));
+            this.clientWsUri = new Uri(string.Format("{0}://{1}/api/speech/detect-and-translate?{2}", this.options.IsSecure ? "wss" : "ws", this.Hostname, query.ToString()));
+            this.SetHMACSignature();
         }
-
 
         private void Init(SpeechClientOptions options, CancellationToken cancellationToken)
         {
@@ -128,22 +188,99 @@ namespace Microsoft.MT.Api.TestUtils
             this.options = options;
             this.cancellationToken = cancellationToken;
             this.webSocketclient = new ClientWebSocket();
-            webSocketclient.Options.SetRequestHeader(this.options.AuthHeaderKey, this.options.AuthHeaderValue);
             webSocketclient.Options.SetRequestHeader("X-ClientAppId", this.options.ClientAppId.ToString());
+            
+            if (!string.IsNullOrWhiteSpace(this.options.AuthHeaderKey))
+            {
+                webSocketclient.Options.SetRequestHeader(this.options.AuthHeaderKey, this.options.AuthHeaderValue);
+            }
+            
             if (!string.IsNullOrWhiteSpace(this.options.CorrelationId))
             {
                 webSocketclient.Options.SetRequestHeader("X-CorrelationId", this.options.CorrelationId);
+                // Value of X-CorrelationId is obfuscated in server logs. For test traffic served by this client, 
+                // add the CorrelationId to a custom header in order to surface the ID in the logs. 
+                webSocketclient.Options.SetRequestHeader("X-MT-TestCorrelationId", this.options.CorrelationId);
             }
 
+            if (!string.IsNullOrWhiteSpace(this.options.OsPlatform))
+            {
+                webSocketclient.Options.SetRequestHeader("X-OsPlatform", this.options.OsPlatform);
+
+            }
+            if (!string.IsNullOrWhiteSpace(this.options.UserId))
+            {
+                webSocketclient.Options.SetRequestHeader("X-UserId", this.options.UserId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.options.ScenarioId))
+            {
+                webSocketclient.Options.SetRequestHeader("X-ScenarioId", this.options.ScenarioId);
+            }
+        }
+
+        /// <summary>
+        /// Computes the HMAC signature for the given URL, app name and optional app key.
+        /// </summary>
+        /// <param name="requestUrl">URL of the request.</param>
+        /// <param name="appName">HMAC app name.</param>
+        /// <param name="appKey">HMAC app key. If omitted, the app name is used to lookup an existing key.</param>
+        /// <returns>HMAC signature to send in X-MT-Sigature header.</returns>
+        public static string GetHmacSignature(Uri requestUrl, string appName, string appKey = "")
+        {
+            if (requestUrl == null)
+            {
+                throw new ArgumentNullException(nameof(requestUrl));
+            }
+            if (String.IsNullOrEmpty(appName))
+            {
+                throw new ArgumentException(nameof(appName));
+            }
+            HMACSHA256 hmacKey;
+            if (String.IsNullOrWhiteSpace(appKey))
+            {
+                throw new ArgumentException($"HMAC key not found for appName={appName}");
+            }
+            else
+            {
+                hmacKey = new HMACSHA256(Convert.FromBase64String(appKey));
+            }
+
+            var urlString = HttpUtility.UrlEncode(requestUrl.Host + requestUrl.PathAndQuery);
+            var timeString = DateTime.UtcNow.ToString("r");
+            var nonce = Guid.NewGuid().ToString("N");
+            var signatureRawData = $"{appName}{urlString}{timeString}{nonce}".ToLower();
+            var signature = Encoding.UTF8.GetBytes(signatureRawData);
+            var hmacSignature = hmacKey.ComputeHash(signature);
+            var hmacSignatureString = Convert.ToBase64String(hmacSignature);
+            
+            return $"{appName}::{hmacSignatureString}::{timeString}::{nonce}";
+        }
+
+        private void SetHMACSignature()
+        {
+            var appName = this.options.ADMClientId;
+            if (!String.IsNullOrWhiteSpace(appName))
+            {
+                var signature = GetHmacSignature(this.clientWsUri, appName, options.HMACKey);
+                webSocketclient.Options.SetRequestHeader("X-MT-Signature", signature);
+            }
         }
 
         public string Hostname { get { return this.options.Hostname; } }
 
-        //TODO: replace this: public string RequestId { get { return this.webSocketclient.RequestId; } }
+        public Uri ClientWsUri { get { return this.clientWsUri; } }
+
+        public string RequestId { get { return this.options.ClientTraceId; } }
 
         public async Task Connect()
         {
-            
+            //validate the certificate for ssl requests
+            if (this.options.IsSecure)
+            {
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(HttpsCertificateValidator.ValidateServerCertificate);
+            }
+
             await webSocketclient.ConnectAsync(this.clientWsUri, this.cancellationToken);
             // Start receive and send loops
             var receiveTask = Task.Run(() => this.StartReceiving())
@@ -277,6 +414,27 @@ namespace Microsoft.MT.Api.TestUtils
             {
                 webSocketclient.Dispose();
             }
+        }
+
+        public static string SetFlightParam(bool useExperimentalLanguages, bool useAppLanguages)
+        {
+            string flightParam = "";
+            var flights = new List<string>();
+            if (useExperimentalLanguages)
+            {
+                flights.Add("experimental");
+            }
+
+            if (useAppLanguages)
+            {
+                flights.Add("app");
+            }
+
+            if (flights.Count > 0)
+            {
+                flightParam = "&flight=" + String.Join(",", flights);
+            }
+            return flightParam;
         }
 
         private void ReportError(Task task)

@@ -56,5 +56,11 @@
     <Setting Name="ExperimentalLanguages" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="APIEndPoint" Type="System.String" Scope="User">
+      <Value Profile="(Default)">dev.microsofttranslator.us</Value>
+    </Setting>
+    <Setting Name="AuthMethod" Type="System.String" Scope="User">
+      <Value Profile="(Default)">HMAC</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

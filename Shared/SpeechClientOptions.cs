@@ -13,13 +13,30 @@ namespace Microsoft.MT.Api.TestUtils
     public abstract class SpeechClientOptions
     {
         public string Hostname { get; set; }
+        public string AccessToken { get; set; }
         public string AuthHeaderKey { get; set; }
         public string AuthHeaderValue { get; set; }
         public string Features { get; set; }
         public string Profanity { get; set; }
+        public string ProfanityAction { get; set; }
+        public string ProfanityMarker { get; set; }
         public Guid ClientAppId { get; set; }
         public string CorrelationId { get; set; }
-        public bool Experimental { get; set; }
+        public string ADMClientId { get; set; }
+
+        public string ClientTraceId { get; set; }
+        /// <summary>
+        /// Indicates if the connection is through secured layer (SSL)
+        /// </summary>
+        public bool IsSecure { get; set; }
+        public bool UseExperimentalLanguages { get; set; }
+        public bool UseAppLanguages { get; set; }
+        public string ScenarioId { get; set; }
+        public string UserId { get; set; }
+        public string HMACKey { get; set; }
+        public string ApiVersion { get; set; }
+
+        public string OsPlatform { get; set; }
 
     }
 
@@ -28,9 +45,15 @@ namespace Microsoft.MT.Api.TestUtils
     /// </summary>
     public class SpeechTranslateClientOptions : SpeechClientOptions
     {
+        public SpeechTranslateClientOptions()
+        {
+            Path = "api/speech/translate";
+        }
+
         public string TranslateFrom { get; set; }
         public string TranslateTo { get; set; }
         public string Voice { get; set; }
+        public string Path { get; set; }
     }
 
     /// <summary>

@@ -118,10 +118,19 @@ namespace SpeechTranslator
         /// </summary>
         private List<TranscriptUtterance> Transcript = new List<TranscriptUtterance>();
 
+        /// <summary>
+        /// Hold the app authentication method
+        /// </summary>
+        private enum AuthMethod { Azure, HMAC };
+        AuthMethod authMethod = AuthMethod.Azure;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            if (Properties.Settings.Default.AuthMethod != null) if (Properties.Settings.Default.AuthMethod == "HMAC") authMethod = AuthMethod.HMAC;
+            if (Properties.Settings.Default.APIEndPoint != null) baseUrl = Properties.Settings.Default.APIEndPoint;  //for non-default sovereign clouds only
+
             Debug.Print("This is a debug message");
 
             Closing += MainWindow_Closing;
@@ -520,23 +529,41 @@ namespace SpeechTranslator
         private async Task ADMAuthenticate(SpeechClientOptions options)
         {
             // Authenticate
-            string admClientId = Properties.Settings.Default.ClientID;
-            Microsoft.Translator.API.AzureAuthToken tokenSource = new Microsoft.Translator.API.AzureAuthToken(admClientId);
-            options.AuthHeaderValue = await tokenSource.GetAccessTokenAsync();
-            if (options.AuthHeaderValue.Length < 10)
+            UpdateUiState(UiState.InvalidCredentials);
+
+            string ClientId = Properties.Settings.Default.ClientID;
+            switch (authMethod)
             {
-                UpdateUiState(UiState.InvalidCredentials);
+                case AuthMethod.Azure:
+                    Microsoft.Translator.API.AzureAuthToken tokenSource = new Microsoft.Translator.API.AzureAuthToken(ClientId);
+                    options.AuthHeaderValue = await tokenSource.GetAccessTokenAsync();
+                    if (options.AuthHeaderValue.Length < 10)
+                    {
+                        UpdateUiState(UiState.InvalidCredentials);
+                    }
+                    break;
+                case AuthMethod.HMAC:
+                    options.UserId = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+                    options.ADMClientId = Properties.Settings.Default.ClientID;
+                    options.HMACKey = Properties.Settings.Default.ClientSecret;
+                    break;
             }
+            UpdateUiState(UiState.Connecting);
         }
 
         private async Task<bool> IsValidCredentialsAsync()
         {
             // Authenticate
-            string admClientId = Properties.Settings.Default.ClientID;
-            Microsoft.Translator.API.AzureAuthToken tokenSource = new Microsoft.Translator.API.AzureAuthToken(admClientId);
-            string token = await tokenSource.GetAccessTokenAsync();
-            if (token.Length>10) return true;
-            else return false;
+            if (authMethod == AuthMethod.Azure)
+            {
+
+                string admClientId = Properties.Settings.Default.ClientID;
+                Microsoft.Translator.API.AzureAuthToken tokenSource = new Microsoft.Translator.API.AzureAuthToken(admClientId);
+                string token = await tokenSource.GetAccessTokenAsync();
+                if (token.Length > 10) return true;
+                else return false;
+            }
+            else return true;
         }
 
 
@@ -610,7 +637,8 @@ namespace SpeechTranslator
             options.CorrelationId = this.correlationId;
             options.Features = GetFeatures().ToString().Replace(" ", "");
             options.Profanity = ((SpeechClient.ProfanityFilter)Enum.Parse(typeof(SpeechClient.ProfanityFilter), GetProfanityLevel(), true)).ToString();
-            options.Experimental = MenuItem_Experimental.IsChecked;
+            options.UseExperimentalLanguages = MenuItem_Experimental.IsChecked;
+            options.IsSecure = true;
 
             // Setup player and recorder but don't start them yet.
             WaveFormat waveFormat = new WaveFormat(16000, 16, 1);

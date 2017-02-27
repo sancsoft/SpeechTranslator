@@ -238,5 +238,29 @@ namespace SpeechTranslator.Properties {
                 this["ExperimentalLanguages"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("dev.microsofttranslator.us")]
+        public string APIEndPoint {
+            get {
+                return ((string)(this["APIEndPoint"]));
+            }
+            set {
+                this["APIEndPoint"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("HMAC")]
+        public string AuthMethod {
+            get {
+                return ((string)(this["AuthMethod"]));
+            }
+            set {
+                this["AuthMethod"] = value;
+            }
+        }
     }
 }

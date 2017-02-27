@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Product Id="*"
-           Name="Microsoft Speech Translator"
+           Name="Microsoft Speech Translator GOV"
            Language="1033"
-           Version="0.9.0.0"
+           Version="0.9.0.1"
            Manufacturer="Microsoft Corporation"
            UpgradeCode="fb2306ef-9362-4038-9339-4a11f3c9385a">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />

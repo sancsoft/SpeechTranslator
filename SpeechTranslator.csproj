@@ -88,6 +88,7 @@
     </Compile>
     <Compile Include="Shared\AudioSource.cs">
     </Compile>
+    <Compile Include="Shared\HttpsCertificateValidator.cs" />
     <Compile Include="Shared\SpeechClient.cs">
     </Compile>
     <Compile Include="Shared\SpeechClientOptions.cs">
@@ -95,8 +96,6 @@
     <Compile Include="Shared\SpeechResponseDecoder.cs">
     </Compile>
     <Compile Include="Shared\Protocol.cs">
-    </Compile>
-    <Compile Include="Shared\ADMToken.cs">
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
