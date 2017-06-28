@@ -50,7 +50,7 @@ namespace SpeechTranslator
 
         private UiState currentState; //create a variable of enum type UiState
 
-        private Dictionary<string, string> spokenLanguages; //create dictionary for the speech translation langauges 
+        private Dictionary<string, string> spokenLanguages; //create dictionary for the speech translation languages 
         private Dictionary<string, string> textLanguages; //create dictionary for the text translation languages
         private Dictionary<string, bool> isLTR; //If this language ID is LTR or RTL
         private Dictionary<string, List<TTsDetail>> voices; //convert a list into a dictionary and call it voices TTsDetails is a class in this file
@@ -103,7 +103,7 @@ namespace SpeechTranslator
 
         private MiniWindow miniwindow = new MiniWindow();
 
-        private int screennumber = 0;   //keeps track of the screen # the miniwindow is positioned on
+        private int screennumber = 0;   //keeps track of the screen # the mini-window is positioned on
 
         private int resetcycle = 0;     //keeps track of cycling through the window positions
 
@@ -145,8 +145,8 @@ namespace SpeechTranslator
 
             Mic.SelectedIndex = Properties.Settings.Default.MicIndex;
 
-            int waveOutDevices = WaveOut.DeviceCount; //get the waveout device count
-            for (int waveOutDevice = 0; waveOutDevice < waveOutDevices; waveOutDevice++) //get all the wavout audio devices on the device and put them in a combo box
+            int waveOutDevices = WaveOut.DeviceCount; //get the wave out device count
+            for (int waveOutDevice = 0; waveOutDevice < waveOutDevices; waveOutDevice++) //get all the wave out audio devices on the device and put them in a combo box
             {
                 WaveOutCapabilities deviceInfo = WaveOut.GetCapabilities(waveOutDevice);
                 Speaker.Items.Add(new ComboBoxItem() { Content = deviceInfo.ProductName, Tag = waveOutDevice });
@@ -721,19 +721,20 @@ namespace SpeechTranslator
                         string[] audioFiles = audioFileInputPath.Split('|');
                         foreach (string currFile in audioFiles)
                         {
-                            Log($"Starting file {currFile}");
+                            Log($"I: Starting file {currFile}");
                             Task currTask = Task.Run(() => this.StreamFile(currFile, streamAudioFromFileInterrupt.Token))
                                 .ContinueWith((x) =>
                                 {
                                     if (x.IsFaulted)
                                     {
-                                        Log(x.Exception, "E: Error while playing audio from input file.");
+                                        Log(x.Exception, "E: Error while playing audio from input file {currFile}.");
                                     }
                                     else
                                     {
-                                        this.Log("I: Done playing audio from input file.");
+                                        Log($"I: Done playing audio from input file {currFile}.");
                                     }
                                 });
+                            //Don't block user thread while waiting
                             while(currTask.Status != TaskStatus.Canceled && currTask.Status != TaskStatus.Faulted && currTask.Status != TaskStatus.RanToCompletion)
                             {
                                 Thread.Sleep(1);
@@ -742,7 +743,7 @@ namespace SpeechTranslator
                     }
                     else
                     {
-                        // Start sending audio from the recoder.
+                        // Start sending audio from the recorder.
                         recorder.StartRecording();
                     }
                     this.Log("I: Connected: cid='{0}', elapsedMs='{1}'.",
