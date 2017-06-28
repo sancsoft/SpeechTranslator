@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NAudio.Wave;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -40,6 +41,41 @@ namespace Microsoft.MT.Api.TestUtils
         {
             this.SourceFile = path;
             this.data = File.ReadAllBytes(this.SourceFile);
+            bool needsConversion = false;
+
+            if (Path.GetExtension(path).ToLowerInvariant() != ".wav")
+            {
+                needsConversion = true;
+            }
+            else
+            {
+                using (NAudio.Wave.WaveFileReader testReader = new NAudio.Wave.WaveFileReader(path))
+                {
+                    int sampleRate = testReader.WaveFormat.SampleRate;
+                    int bitsPerSample = testReader.WaveFormat.BitsPerSample;
+                    int numChannels = testReader.WaveFormat.Channels;
+                    if (sampleRate != 16000 || bitsPerSample != 16 || numChannels != 1)
+                    {
+                        needsConversion = true;
+                    }
+                }
+            }
+            if(needsConversion)
+            {
+                WaveFormat desiredFormat = new WaveFormat(16000, 16, 1);
+                string tempFile = Path.GetTempFileName();
+                //Needs conversion
+                using (var reader = new MediaFoundationReader(path))
+                using (var resampler = new MediaFoundationResampler(reader, desiredFormat))
+                {
+                    WaveFileWriter.CreateWaveFile(tempFile, resampler);
+                    this.SourceFile = tempFile;
+                    this.data = File.ReadAllBytes(this.SourceFile);
+                }
+                File.Delete(tempFile);
+            }
+
+           
             if (dataOnly)
             {
                 using (MemoryStream stream = new MemoryStream())

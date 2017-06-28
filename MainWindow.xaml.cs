@@ -79,6 +79,12 @@ namespace SpeechTranslator
 
         private int textToSpeechBytes = 0;
 
+        //How long to wait between samples in batch mode. 
+        //This number was determined by trial and error and was the shortest
+        //wait I was able to get away with consistently.
+        private const int batchWaitTime = 7;
+        private bool batchMode = false;
+
         // If (DateTime.Now < suspendInputAudioUntil) then ignore input audio to avoid echo.
         private DateTime suspendInputAudioUntil = DateTime.MinValue; // DateTime is a struct - DateTime.MinValue represents the smallest possible value of dateTime
 
@@ -417,10 +423,11 @@ namespace SpeechTranslator
             dialog.InitialDirectory = Properties.Settings.Default.OutputDirectory;
             dialog.Filter = "wav files (*.wav)|*.wav|All files (*.*)|*.*";
             dialog.FilterIndex = 1;
+            dialog.Multiselect = true;
             dialog.RestoreDirectory = true;
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                this.AudioFileInput.Text = dialog.FileName;
+                this.AudioFileInput.Text = string.Join("|", dialog.FileNames);
             }
         }
 
@@ -577,11 +584,14 @@ namespace SpeechTranslator
             if (tag == "File")
             {
                 audioFileInputPath = this.AudioFileInput.Text;
-                if (!File.Exists(audioFileInputPath))
+                foreach (string currFile in audioFileInputPath.Split('|'))
                 {
-                    SetMessage(String.Format("Invalid audio source: selected file does not exist."), "", MessageKind.Error);
-                    UpdateUiState(UiState.ReadyToConnect);
-                    return;
+                    if (!File.Exists(currFile))
+                    {
+                        SetMessage(String.Format($"Invalid audio source: selected file {currFile} does not exist."), "", MessageKind.Error);
+                        UpdateUiState(UiState.ReadyToConnect);
+                        return;
+                    }
                 }
             }
             bool shouldSuspendInputAudioDuringTTS = this.CutInputAudioCheckBox.IsChecked.HasValue ? this.CutInputAudioCheckBox.IsChecked.Value : false;
@@ -643,9 +653,12 @@ namespace SpeechTranslator
                 sampleProvider = playerTextToSpeechWaveProvider.ToSampleProvider();
             }
 
-            player = new WaveOut();
-            player.DeviceNumber = (int)((ComboBoxItem)Speaker.SelectedItem).Tag;
-            player.Init(sampleProvider);
+            if (!batchMode)
+            {
+                player = new WaveOut();
+                player.DeviceNumber = (int)((ComboBoxItem)Speaker.SelectedItem).Tag;
+                player.Init(sampleProvider);
+            }
 
             this.audioBytesSent = 0;
 
@@ -688,8 +701,12 @@ namespace SpeechTranslator
                 }
                 else
                 {
-                    // Start playing incoming audio
-                    player.Play();
+
+                    if (!batchMode)
+                    {
+                        // Start playing incoming audio
+                        player.Play();
+                    }
                     // Start recording and sending
                     if (logAudioFileName != null)
                     {
@@ -701,18 +718,27 @@ namespace SpeechTranslator
                     if (audioFileInputPath != null)
                     {
                         streamAudioFromFileInterrupt = new CancellationTokenSource();
-                        Task.Run(() => this.StreamFile(audioFileInputPath, streamAudioFromFileInterrupt.Token))
-                            .ContinueWith((x) =>
+                        string[] audioFiles = audioFileInputPath.Split('|');
+                        foreach (string currFile in audioFiles)
+                        {
+                            Log($"Starting file {currFile}");
+                            Task currTask = Task.Run(() => this.StreamFile(currFile, streamAudioFromFileInterrupt.Token))
+                                .ContinueWith((x) =>
+                                {
+                                    if (x.IsFaulted)
+                                    {
+                                        Log(x.Exception, "E: Error while playing audio from input file.");
+                                    }
+                                    else
+                                    {
+                                        this.Log("I: Done playing audio from input file.");
+                                    }
+                                });
+                            while(currTask.Status != TaskStatus.Canceled && currTask.Status != TaskStatus.Faulted && currTask.Status != TaskStatus.RanToCompletion)
                             {
-                                if (x.IsFaulted)
-                                {
-                                    Log(x.Exception, "E: Error while playing audio from input file.");
-                                }
-                                else
-                                {
-                                    this.Log("I: Done playing audio from input file.");
-                                }
-                            });
+                                Thread.Sleep(1);
+                            }
+                        }
                     }
                     else
                     {
@@ -756,9 +782,13 @@ namespace SpeechTranslator
                 // Send chunk to speech translation service
                 this.OnAudioDataAvailable(chunk);
                 // Send chunk to local audio player via the mixer
-                playerAudioInputWaveProvider.AddSamples(chunk.Array, chunk.Offset, chunk.Count);
 
-                handle.WaitOne(wait);
+                if (!batchMode)
+                {
+                    playerAudioInputWaveProvider.AddSamples(chunk.Array, chunk.Offset, chunk.Count);
+                }
+
+                handle.WaitOne(batchMode ? batchWaitTime : wait);
                 tnext = tnext + audioChunkSizeInTicks;
                 wait = (int)((tnext - DateTime.Now.Ticks) / TimeSpan.TicksPerMillisecond);
                 if (wait < 0) wait = 0;
@@ -1368,6 +1398,16 @@ namespace SpeechTranslator
                 MenuItem_SaveTranscript.IsEnabled = true;
             else
                 MenuItem_SaveTranscript.IsEnabled = false;
+        }
+
+        private void BatchMode_Checked(object sender, RoutedEventArgs e)
+        {
+            batchMode = true;
+        }
+
+        private void BatchMode_Unchecked(object sender, RoutedEventArgs e)
+        {
+            batchMode = false;
         }
     }
 
