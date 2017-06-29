@@ -22,6 +22,8 @@ namespace Microsoft.MT.Api.TestUtils
 
         public string SourceFile { get; private set; }
 
+        public TimeSpan Duration { get; set; }
+
         /// <summary>
         /// Creates an audio source from a WAV file (16bit PCM 16kHz - 320 bytes / 10ms).
         /// Emit the entire file (RIFF header and all sections).
@@ -42,6 +44,7 @@ namespace Microsoft.MT.Api.TestUtils
             this.SourceFile = path;
             this.data = File.ReadAllBytes(this.SourceFile);
             bool needsConversion = false;
+
 
             if (Path.GetExtension(path).ToLowerInvariant() != ".wav")
             {
@@ -72,7 +75,20 @@ namespace Microsoft.MT.Api.TestUtils
                     this.SourceFile = tempFile;
                     this.data = File.ReadAllBytes(this.SourceFile);
                 }
+                using(WaveFileReader r = new WaveFileReader(tempFile))
+                {
+                    Duration = r.TotalTime;
+                }
+
                 File.Delete(tempFile);
+            }
+            else
+            {
+                using(WaveFileReader r = new WaveFileReader(path))
+                {
+                    Duration = r.TotalTime;
+                }
+
             }
 
            

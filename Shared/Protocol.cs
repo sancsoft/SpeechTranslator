@@ -29,6 +29,17 @@ namespace Microsoft.MT.Api
         /// Translation of the recognized text.
         [DataMember(Name = "translation", EmitDefaultValue = false)]
         public string Translation;
+
+        /// <summary>
+        /// Time offset in clicks of the start of the partial recognition in ticks relative to the beginning of streaming.
+        /// </summary>
+        [DataMember(Name = "audioTimeOffset")]
+        public string AudioTimeOffset;
+        /// <summary>
+        /// Duration in ticks of the partial recognition
+        /// </summary>
+        [DataMember(Name = "audioTimeSize")]
+        public string AudioTimeSize;
     }
 
     
@@ -50,6 +61,17 @@ namespace Microsoft.MT.Api
         /// Translation of the recognized text.
         [DataMember(Name = "translation", EmitDefaultValue = false)]
         public string Translation;
+        /// <summary>
+        /// Time offset in clicks of the start of the recognition in ticks relative to the beginning of streaming.
+        /// </summary>
+        [DataMember(Name = "audioTimeOffset")]
+        public string AudioTimeOffset;
+        /// <summary>
+        /// Duration in ticks of the recognition
+        /// </summary>
+        [DataMember(Name = "audioTimeSize")]
+        public string AudioTimeSize;
+
     }
 
    

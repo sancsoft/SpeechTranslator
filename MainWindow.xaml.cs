@@ -85,6 +85,12 @@ namespace SpeechTranslator
         private const int batchWaitTime = 7;
         private bool batchMode = false;
 
+        private long lastReceivedPacketTick = 0;
+        private const long idleSecondsToWait = 15;
+        //Number of seconds since the last packet to wait before deciding we're done with a file
+
+        private TimeSpan lastReceivedEndTime = new TimeSpan();
+
         // If (DateTime.Now < suspendInputAudioUntil) then ignore input audio to avoid echo.
         private DateTime suspendInputAudioUntil = DateTime.MinValue; // DateTime is a struct - DateTime.MinValue represents the smallest possible value of dateTime
 
@@ -176,6 +182,7 @@ namespace SpeechTranslator
             FeaturePartials.IsChecked = Properties.Settings.Default.PartialResults;
             Voice.SelectedIndex = Properties.Settings.Default.VoiceIndex;
             MenuItem_Experimental.IsChecked = Properties.Settings.Default.ExperimentalLanguages;
+            BatchProgress.Visibility = Visibility.Hidden;
 
             UpdateLanguageSettings(); 
 
@@ -467,10 +474,11 @@ namespace SpeechTranslator
 
             s2smtClient.OnBinaryData += (c, a) => { AddSamplesToPlay(a, suspendInputAudioDuringTTS); };
             s2smtClient.OnEndOfBinaryData += (c, a) => { AddSamplesToPlay(a, suspendInputAudioDuringTTS); };
-            s2smtClient.OnTextData += (c, a) => { textDecoder.AppendData(a); };
+            s2smtClient.OnTextData += (c, a) => { textDecoder.AppendData(a); lastReceivedPacketTick = DateTime.Now.Ticks; };
             s2smtClient.OnEndOfTextData += (c, a) =>
             {
                 textDecoder.AppendData(a);
+                lastReceivedPacketTick = DateTime.Now.Ticks;
                 textDecoder
                     .Decode()
                     .ContinueWith(t =>
@@ -485,7 +493,12 @@ namespace SpeechTranslator
                             if (msg.GetType() == typeof(FinalResultMessage))
                             {
                                 var final = msg as FinalResultMessage;
-                                Log("Final recognition {0}: {1}", final.Id, final.Recognition);
+                                long offset = long.Parse(final.AudioTimeOffset);
+                                long duration = long.Parse(final.AudioTimeSize);
+                                TimeSpan startTime = TimeSpan.FromTicks(offset);
+                                TimeSpan endTime = TimeSpan.FromTicks(offset + duration);
+                                Log("Final recognition {0} ({1} - {2}): {3}", final.Id, startTime.ToString(), endTime.ToString(), final.Recognition);
+                                lastReceivedEndTime = endTime; 
                                 Log("Final translation {0}: {1}", final.Id, final.Translation);
                                 SafeInvoke(() => SetMessage(final.Recognition, final.Translation, MessageKind.Chat));
                                 finaltranslationhistory = final.Translation + "\n" + finaltranslationhistory.Substring(0, Math.Min(500, finaltranslationhistory.Length));
@@ -517,6 +530,7 @@ namespace SpeechTranslator
                     if (currentState == UiState.Connected)
                     {
                         Log("E: Connection has been lost.");
+                        Log($"E: Errors (if any): \n{string.Join("\n", s2smtClient.Errors)}");
                         Disconnect();
                     }
                 });
@@ -719,8 +733,20 @@ namespace SpeechTranslator
                     {
                         streamAudioFromFileInterrupt = new CancellationTokenSource();
                         string[] audioFiles = audioFileInputPath.Split('|');
-                        foreach (string currFile in audioFiles)
+                        if (batchMode)
                         {
+                            this.SafeInvoke(() =>
+                            {
+                                BatchProgress.Minimum = 0;
+                                BatchProgress.Maximum = audioFiles.Length;
+                            });
+                        }
+                        for (int i=0; i < audioFiles.Length; ++i)
+                        {
+                            lastReceivedPacketTick = DateTime.Now.Ticks;
+                            string currFile = audioFiles[i];
+                            this.SafeInvoke(() => BatchProgress.Value = i);
+                            this.SafeInvoke(() => this.UpdateUiState(UiState.Connected));
                             Log($"I: Starting file {currFile}");
                             Task currTask = Task.Run(() => this.StreamFile(currFile, streamAudioFromFileInterrupt.Token))
                                 .ContinueWith((x) =>
@@ -731,13 +757,48 @@ namespace SpeechTranslator
                                     }
                                     else
                                     {
-                                        Log($"I: Done playing audio from input file {currFile}.");
+                                        Log($"I: Done streaming audio from input file {currFile}.");
                                     }
                                 });
-                            //Don't block user thread while waiting
-                            while(currTask.Status != TaskStatus.Canceled && currTask.Status != TaskStatus.Faulted && currTask.Status != TaskStatus.RanToCompletion)
+
+                            //Doing multiple files is a little tricky, because
+                            //there is no way to know which received packets come from which file
+                            //(it's all just one big stream as far as the service is concerned).
+                            bool done = false;
+                            bool error = false;
+                            while(!done)
                             {
-                                Thread.Sleep(1);
+                               if (currTask.Status == TaskStatus.Canceled || currTask.Status == TaskStatus.Faulted)
+                                {
+                                    Log($"E: Task was canceled or faulted.");
+                                    done = true;
+                                    error = true;
+                                }
+                                else if(!s2smtClient.IsConnected())
+                                {
+                                    Log($"E: Client is not connected");
+                                    Log($"Errors from client (if any): \n{string.Join("\n", s2smtClient.Errors)}");
+                                    done = true;
+                                    error = true;
+                                }
+                                else if(currTask.Status == TaskStatus.RanToCompletion)
+                                {
+                                    long ticksSinceLastResult = DateTime.Now.Ticks - this.lastReceivedPacketTick;
+                                    if (TimeSpan.TicksPerSecond * idleSecondsToWait < ticksSinceLastResult)
+                                    {
+                                        Log($"Ticks since last result: {ticksSinceLastResult}, waitTicks {TimeSpan.TicksPerSecond * idleSecondsToWait}");
+                                        Log($"I: Finished receiving from input file {currFile}");
+                                        done = true;
+                                    }
+                                }
+                                if (!done)
+                                {
+                                    Thread.Sleep(1);
+                                }
+                            }
+                            if(error)
+                            {
+                                break;
                             }
                         }
                     }
@@ -759,21 +820,28 @@ namespace SpeechTranslator
                         this.UpdateUiState(UiState.ReadyToConnect);
                     });
                 }
+                this.SafeInvoke(() => BatchProgress.Value = 0);
             });
         }
 
         private void StreamFile(string path, CancellationToken token)
         {
+
+            WavFileAudioSource wavFile = new WavFileAudioSource(path, true);
             var audioSource = new AudioSourceCollection(new IAudioSource[] {
-                new WavFileAudioSource(path, true),
+                wavFile,
                 new WavSilenceAudioSource(2000),
             });
+
+            Log($"I: File {path} total duration: {wavFile.Duration}");
 
             int audioChunkSizeInMs = 100;
             var handle = new AutoResetEvent(true);
             long audioChunkSizeInTicks = TimeSpan.TicksPerMillisecond * (long)(audioChunkSizeInMs);
             long tnext = DateTime.Now.Ticks + audioChunkSizeInMs;
             int wait = audioChunkSizeInMs;
+            int maxSecondsAhead = 60;
+            int chunksSent = 0;
             foreach (var chunk in audioSource.Emit(audioChunkSizeInMs))
             {
                 if (token.IsCancellationRequested)
@@ -782,6 +850,7 @@ namespace SpeechTranslator
                 }
                 // Send chunk to speech translation service
                 this.OnAudioDataAvailable(chunk);
+                ++chunksSent;
                 // Send chunk to local audio player via the mixer
 
                 if (!batchMode)
@@ -789,7 +858,23 @@ namespace SpeechTranslator
                     playerAudioInputWaveProvider.AddSamples(chunk.Array, chunk.Offset, chunk.Count);
                 }
 
-                handle.WaitOne(batchMode ? batchWaitTime : wait);
+                if (batchMode)
+                {
+                    while((chunksSent * audioChunkSizeInTicks) - lastReceivedEndTime.Ticks > maxSecondsAhead * TimeSpan.TicksPerSecond)
+                    {
+                        if (token.IsCancellationRequested)
+                        {
+                            return;
+                        }
+                        Thread.Sleep(1000);
+                    }
+                    handle.WaitOne(batchWaitTime);
+                }
+                else
+                {
+                    handle.WaitOne(wait);
+                }
+
                 tnext = tnext + audioChunkSizeInTicks;
                 wait = (int)((tnext - DateTime.Now.Ticks) / TimeSpan.TicksPerMillisecond);
                 if (wait < 0) wait = 0;
@@ -1024,12 +1109,13 @@ namespace SpeechTranslator
 
         private SpeechClient.Features GetFeatures()
         {
-            SpeechClient.Features features = 0;
+            SpeechClient.Features features =  SpeechClient.Features.TimingInfo;
 
             if (FeaturePartials.IsChecked.Value)
                 features |= SpeechClient.Features.Partial;
             if (FeatureTTS.IsChecked.Value)
                 features |= SpeechClient.Features.TextToSpeech;
+
             
             return features;
         }
@@ -1404,11 +1490,18 @@ namespace SpeechTranslator
         private void BatchMode_Checked(object sender, RoutedEventArgs e)
         {
             batchMode = true;
+            BatchProgress.Visibility = Visibility.Visible;
         }
 
         private void BatchMode_Unchecked(object sender, RoutedEventArgs e)
         {
             batchMode = false;
+            BatchProgress.Visibility = Visibility.Hidden;
+        }
+
+        private void ProgressBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+
         }
     }
 
