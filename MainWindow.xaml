@@ -58,7 +58,7 @@
             <Label Grid.Row="1" Grid.Column="0" Content="Speaker" VerticalAlignment="Center" />
             <ComboBox x:Name="Speaker" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="300" SelectionChanged="Speaker_SelectionChanged" />
             <Label x:Name="Language1Label" Grid.Row="2" Grid.Column="0" Content="From Language" VerticalAlignment="Center" />
-            <ComboBox x:Name="FromLanguage" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="200" SelectionChanged="FromLanguage_SelectionChanged"/>
+            <ComboBox x:Name="FromLanguage" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="200" SelectionChanged="FromLanguage_SelectionChanged" Margin="0,0,0,7"/>
             <Label x:Name="Language2Label" Grid.Row="3" Grid.Column="0" Content="To Language" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <ComboBox x:Name="ToLanguage" HorizontalAlignment="Left" VerticalAlignment="Center" Width="200" SelectionChanged="ToLanguage_SelectionChanged"/>

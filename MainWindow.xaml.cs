@@ -187,6 +187,7 @@ namespace SpeechTranslator
             Voice.SelectedIndex = Properties.Settings.Default.VoiceIndex;
             MenuItem_Experimental.IsChecked = Properties.Settings.Default.ExperimentalLanguages;
             BatchProgress.Visibility = Visibility.Hidden;
+            BatchMode.IsChecked = Properties.Settings.Default.BatchMode;
 
             UpdateLanguageSettings(); 
 
@@ -210,6 +211,7 @@ namespace SpeechTranslator
             Properties.Settings.Default.ToLanguageIndex = ToLanguage.SelectedIndex;
             Properties.Settings.Default.VoiceIndex = Voice.SelectedIndex;
             Properties.Settings.Default.ExperimentalLanguages = MenuItem_Experimental.IsChecked;
+            Properties.Settings.Default.BatchMode = batchMode;
             Properties.Settings.Default.Save();
             Environment.Exit(0);
         }
@@ -229,7 +231,18 @@ namespace SpeechTranslator
                         state = UiState.MissingLanguageList;
                         this.Log(t.Exception, "E: Failed to get language list: {0}", t.IsCanceled ? "Timeout" : "");
                     }
-                    if (await checkcredentialsTask) SafeInvoke(() => UpdateUiState(state));
+                    if (await checkcredentialsTask)
+                    {
+                        SafeInvoke(() => UpdateUiState(state));
+                        if(FromLanguage.Items.Count > Properties.Settings.Default.FromLanguageIndex)
+                        {
+                            FromLanguage.SelectedIndex = Properties.Settings.Default.FromLanguageIndex;
+                        }
+                        if(ToLanguage.Items.Count > Properties.Settings.Default.ToLanguageIndex)
+                        {
+                            ToLanguage.SelectedIndex = Properties.Settings.Default.ToLanguageIndex;
+                        }
+                    }
                     else SafeInvoke(() => UpdateUiState(UiState.InvalidCredentials));
                 });
         }
@@ -424,6 +437,7 @@ namespace SpeechTranslator
                 string tag = selectedItem.Tag as string;
                 this.AudioFileInput.Visibility = (tag == "File") ? Visibility.Visible : Visibility.Collapsed;
                 this.AudioFileInputButton.Visibility = this.AudioFileInput.Visibility;
+                this.BatchMode.Visibility = this.AudioFileInput.Visibility;
                 Properties.Settings.Default.MicIndex = Mic.SelectedIndex;
             }
         }
