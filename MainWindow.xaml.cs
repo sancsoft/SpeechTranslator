@@ -234,14 +234,6 @@ namespace SpeechTranslator
                     if (await checkcredentialsTask)
                     {
                         SafeInvoke(() => UpdateUiState(state));
-                        if(FromLanguage.Items.Count > Properties.Settings.Default.FromLanguageIndex)
-                        {
-                            FromLanguage.SelectedIndex = Properties.Settings.Default.FromLanguageIndex;
-                        }
-                        if(ToLanguage.Items.Count > Properties.Settings.Default.ToLanguageIndex)
-                        {
-                            ToLanguage.SelectedIndex = Properties.Settings.Default.ToLanguageIndex;
-                        }
                     }
                     else SafeInvoke(() => UpdateUiState(UiState.InvalidCredentials));
                 });
@@ -322,8 +314,7 @@ namespace SpeechTranslator
                 FromLanguage.Items.Clear();
                 foreach (var language in spokenLanguages)
                 {
-                    bool isSelected = (CultureInfo.CurrentUICulture.Name.Equals(language.Key, StringComparison.OrdinalIgnoreCase)) ? true : false;
-                    FromLanguage.Items.Add(new ComboBoxItem() { Content = language.Value, Tag = language.Key, IsSelected = isSelected});
+                    FromLanguage.Items.Add(new ComboBoxItem() { Content = language.Value, Tag = language.Key});
                 }
 
                 // Gather the set of text translation languages
@@ -348,6 +339,17 @@ namespace SpeechTranslator
                 }
 
                 if (Properties.Settings.Default.FromLanguageIndex >= 0) FromLanguage.SelectedIndex = Properties.Settings.Default.FromLanguageIndex;
+                else
+                {
+                    for(int i=0; i < FromLanguage.Items.Count; ++i)
+                    {
+                        ComboBoxItem item = (ComboBoxItem)FromLanguage.Items[i];
+                        if(CultureInfo.CurrentUICulture.Name.Equals((string)item.Tag, StringComparison.OrdinalIgnoreCase))
+                        {
+                            FromLanguage.SelectedIndex = i;
+                        }
+                    }
+                }
                 if (Properties.Settings.Default.ToLanguageIndex >= 0) ToLanguage.SelectedIndex = Properties.Settings.Default.ToLanguageIndex;
                 else
                 {
@@ -851,7 +853,8 @@ namespace SpeechTranslator
         //opening the stream in order to figure out whether we're too far ahead
         //of the decoder, because the timestamps we get back from the server
         //are relative to when the stream was opened, NOT the beginning of
-        //the file.
+        //the file. So we return the number of chunks we set each time, initializing
+        //with the value from the previous call.
         private int StreamFile(string path, CancellationToken token, int initChunks)
         {
 
