@@ -89,6 +89,10 @@ namespace SpeechTranslator
         private const long idleSecondsToWait = 15;
         //Number of seconds since the last packet to wait before deciding we're done with a file
 
+        private long currentFileStartTicks = 0;
+
+        private const int audioChunkSizeInMs = 100;
+
         private TimeSpan lastReceivedEndTime = new TimeSpan();
 
         // If (DateTime.Now < suspendInputAudioUntil) then ignore input audio to avoid echo.
@@ -495,10 +499,12 @@ namespace SpeechTranslator
                                 var final = msg as FinalResultMessage;
                                 long offset = long.Parse(final.AudioTimeOffset);
                                 long duration = long.Parse(final.AudioTimeSize);
-                                TimeSpan startTime = TimeSpan.FromTicks(offset);
-                                TimeSpan endTime = TimeSpan.FromTicks(offset + duration);
-                                Log("Final recognition {0} ({1} - {2}): {3}", final.Id, startTime.ToString(), endTime.ToString(), final.Recognition);
-                                lastReceivedEndTime = endTime; 
+                                TimeSpan streamStartTime = TimeSpan.FromTicks(offset);
+                                TimeSpan streamEndTime = TimeSpan.FromTicks(offset + duration);
+                                TimeSpan currFileStartTime = TimeSpan.FromTicks(offset - currentFileStartTicks);
+                                TimeSpan currFileEndime = TimeSpan.FromTicks(currFileStartTime.Ticks + duration);
+                                Log("Final recognition {0} ({1} - {2}): {3}", final.Id, currFileStartTime.ToString(), currFileEndime.ToString(), final.Recognition);
+                                lastReceivedEndTime = streamEndTime; 
                                 Log("Final translation {0}: {1}", final.Id, final.Translation);
                                 SafeInvoke(() => SetMessage(final.Recognition, final.Translation, MessageKind.Chat));
                                 finaltranslationhistory = final.Translation + "\n" + finaltranslationhistory.Substring(0, Math.Min(500, finaltranslationhistory.Length));
@@ -741,6 +747,7 @@ namespace SpeechTranslator
                                 BatchProgress.Maximum = audioFiles.Length;
                             });
                         }
+                        int totalChunksSent = 0;
                         for (int i=0; i < audioFiles.Length; ++i)
                         {
                             lastReceivedPacketTick = DateTime.Now.Ticks;
@@ -748,7 +755,7 @@ namespace SpeechTranslator
                             this.SafeInvoke(() => BatchProgress.Value = i);
                             this.SafeInvoke(() => this.UpdateUiState(UiState.Connected));
                             Log($"I: Starting file {currFile}");
-                            Task currTask = Task.Run(() => this.StreamFile(currFile, streamAudioFromFileInterrupt.Token))
+                            Task currTask = Task.Run(() => totalChunksSent = this.StreamFile(currFile, streamAudioFromFileInterrupt.Token, totalChunksSent))
                                 .ContinueWith((x) =>
                                 {
                                     if (x.IsFaulted)
@@ -760,6 +767,7 @@ namespace SpeechTranslator
                                         Log($"I: Done streaming audio from input file {currFile}.");
                                     }
                                 });
+                            
 
                             //Doing multiple files is a little tricky, because
                             //there is no way to know which received packets come from which file
@@ -796,6 +804,7 @@ namespace SpeechTranslator
                                     Thread.Sleep(1);
                                 }
                             }
+                            currentFileStartTicks = totalChunksSent * (TimeSpan.TicksPerMillisecond * audioChunkSizeInMs);
                             if(error)
                             {
                                 break;
@@ -824,7 +833,12 @@ namespace SpeechTranslator
             });
         }
 
-        private void StreamFile(string path, CancellationToken token)
+        //We need to keep track of how many total chunks we have sent since
+        //opening the stream in order to figure out whether we're too far ahead
+        //of the decoder, because the timestamps we get back from the server
+        //are relative to when the stream was opened, NOT the beginning of
+        //the file.
+        private int StreamFile(string path, CancellationToken token, int initChunks)
         {
 
             WavFileAudioSource wavFile = new WavFileAudioSource(path, true);
@@ -835,18 +849,17 @@ namespace SpeechTranslator
 
             Log($"I: File {path} total duration: {wavFile.Duration}");
 
-            int audioChunkSizeInMs = 100;
             var handle = new AutoResetEvent(true);
             long audioChunkSizeInTicks = TimeSpan.TicksPerMillisecond * (long)(audioChunkSizeInMs);
             long tnext = DateTime.Now.Ticks + audioChunkSizeInMs;
             int wait = audioChunkSizeInMs;
             int maxSecondsAhead = 60;
-            int chunksSent = 0;
+            int chunksSent = initChunks;
             foreach (var chunk in audioSource.Emit(audioChunkSizeInMs))
             {
                 if (token.IsCancellationRequested)
                 {
-                    return;
+                    return chunksSent;
                 }
                 // Send chunk to speech translation service
                 this.OnAudioDataAvailable(chunk);
@@ -864,7 +877,7 @@ namespace SpeechTranslator
                     {
                         if (token.IsCancellationRequested)
                         {
-                            return;
+                            return chunksSent;
                         }
                         Thread.Sleep(1000);
                     }
@@ -874,11 +887,11 @@ namespace SpeechTranslator
                 {
                     handle.WaitOne(wait);
                 }
-
                 tnext = tnext + audioChunkSizeInTicks;
                 wait = (int)((tnext - DateTime.Now.Ticks) / TimeSpan.TicksPerMillisecond);
                 if (wait < 0) wait = 0;
             }
+            return chunksSent;
         }
 
         private void Disconnect()
