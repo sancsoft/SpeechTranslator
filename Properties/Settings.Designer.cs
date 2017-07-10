@@ -238,5 +238,17 @@ namespace SpeechTranslator.Properties {
                 this["ExperimentalLanguages"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool BatchMode {
+            get {
+                return ((bool)(this["BatchMode"]));
+            }
+            set {
+                this["BatchMode"] = value;
+            }
+        }
     }
 }

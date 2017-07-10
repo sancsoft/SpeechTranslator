@@ -54,6 +54,11 @@ namespace Microsoft.MT.Api.TestUtils
             /// Gets partial speech recognitions (hypotheses)
             /// </summary>
             Partial = 2,
+
+            /// <summary>
+            /// Returns timing offsets from the beginning of the stream for recognitions.
+            /// </summary>
+            TimingInfo = 3,
         }
 
         /// <summary>
@@ -94,6 +99,8 @@ namespace Microsoft.MT.Api.TestUtils
 
         /// Queue of messages waiting to be sent.
         private BlockingCollection<QueueItem> outgoingMessageQueue = new BlockingCollection<QueueItem>();
+
+        public List<string> Errors { get; } = new List<string>();
 
         public SpeechClient(SpeechTranslateClientOptions options, CancellationToken cancellationToken)
         {
@@ -252,6 +259,7 @@ namespace Microsoft.MT.Api.TestUtils
                     {
                         case WebSocketMessageType.Close:
                             disconnecting = true;
+                            Errors.Add($"{DateTime.Now} : Disconnecting web socket with status {result.CloseStatus} for the following reason: {result.CloseStatusDescription}");
                             await this.Disconnect();
                             break;
                         case WebSocketMessageType.Binary:

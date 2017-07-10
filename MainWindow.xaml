@@ -53,12 +53,12 @@
             <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
                 <ComboBox x:Name="Mic" HorizontalAlignment="Left" VerticalAlignment="Center" Width="300" SelectionChanged="Mic_SelectionChanged" />
                 <TextBox x:Name="AudioFileInput" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="400" Height="20" Margin="5"/>
-                <Button x:Name="AudioFileInputButton" Background="#FFACACAC" Grid.Row="0" Grid.Column="1" Content="Select" HorizontalAlignment="Right" Margin="5" VerticalAlignment="Stretch"  Width="60" Height="20" Click="AudioFileInputButton_Click"/>
+                <Button x:Name="AudioFileInputButton" Background="#FFACACAC" Grid.Row="0" Grid.Column="1" Content="Select" HorizontalAlignment="Right" Margin="5,8"  Width="60" Click="AudioFileInputButton_Click"/>
             </StackPanel>
             <Label Grid.Row="1" Grid.Column="0" Content="Speaker" VerticalAlignment="Center" />
             <ComboBox x:Name="Speaker" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="300" SelectionChanged="Speaker_SelectionChanged" />
             <Label x:Name="Language1Label" Grid.Row="2" Grid.Column="0" Content="From Language" VerticalAlignment="Center" />
-            <ComboBox x:Name="FromLanguage" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="200" SelectionChanged="FromLanguage_SelectionChanged"/>
+            <ComboBox x:Name="FromLanguage" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="200" SelectionChanged="FromLanguage_SelectionChanged" Margin="0,0,0,7"/>
             <Label x:Name="Language2Label" Grid.Row="3" Grid.Column="0" Content="To Language" VerticalAlignment="Center" />
             <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <ComboBox x:Name="ToLanguage" HorizontalAlignment="Left" VerticalAlignment="Center" Width="200" SelectionChanged="ToLanguage_SelectionChanged"/>
@@ -81,10 +81,12 @@
                     <RowDefinition  />
                 </Grid.RowDefinitions>
                 <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
-                    <Button x:Name="StartListening" Content="Start" Background="#FFACACAC" Margin="0,2" Width="200" Click="StartListening_Click" IsDefault="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    <Button x:Name="StartListening" Content="Start" Background="#FFACACAC" Margin="0,2,0,0" Width="200" Click="StartListening_Click" IsDefault="True" HorizontalAlignment="Stretch" Height="21" VerticalAlignment="Top"/>
                 </StackPanel>
             </Grid>
             <Label x:Name="CutInputAudioLabel" Grid.Row="6" Grid.Column="0" Content="CUTTING INPUT AUDIO" Foreground="Blue" VerticalAlignment="Center" Visibility="Collapsed" />
+            <CheckBox x:Name="BatchMode" Content="Batch Mode" Grid.Column="1" HorizontalAlignment="Left" Margin="326,10,0,0" Grid.Row="1" VerticalAlignment="Top" ToolTip="Mute speaker and translate faster than real time" Checked="BatchMode_Checked" Unchecked="BatchMode_Unchecked"/>
+            <ProgressBar x:Name="BatchProgress" Grid.Column="1" HorizontalAlignment="Left" Height="15" Margin="426,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="345" ValueChanged="ProgressBar_ValueChanged"/>
         </Grid>
         <StackPanel x:Name="Dialog" Grid.Row="2" Margin="0,0,0,0" >
             <Border x:Name="DialogRecognitionBorder" BorderThickness="5,5,5,0" BorderBrush="#FFE6E6E6">
