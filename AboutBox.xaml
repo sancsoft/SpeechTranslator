@@ -1,0 +1,20 @@
+﻿<Window x:Class="SpeechTranslator.AboutBox"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SpeechTranslator"
+        mc:Ignorable="d"
+        Title="About" Height="200" Width="360">
+ 
+    <Grid>
+        <StackPanel HorizontalAlignment="Left" Height="140" Margin="20,20,0,0" VerticalAlignment="Top" >
+            <TextBlock Text="Speech Translator" HorizontalAlignment="Left" VerticalAlignment="Top" FontWeight="Bold"/>
+            <TextBlock Text="Version 0.9.1" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            <TextBlock Text="A sample application for the Translator Speech API on Microsoft Azure." Margin="0,20,0,0" TextWrapping="Wrap"/>
+            <TextBlock Text="https://github.com/microsofttranslator/speechtranslator" TextWrapping="Wrap"/>
+        </StackPanel>
+
+
+    </Grid>
+</Window>

@@ -134,6 +134,7 @@ namespace SpeechTranslator
         /// </summary>
         private List<TranscriptUtterance> Transcript = new List<TranscriptUtterance>();
 
+        public SettingsWindow AboutBox { get; private set; }
 
         public MainWindow()
         {
@@ -578,8 +579,12 @@ namespace SpeechTranslator
             string admClientId = Properties.Settings.Default.ClientID;
             Microsoft.Translator.API.AzureAuthToken tokenSource = new Microsoft.Translator.API.AzureAuthToken(admClientId);
             string token = await tokenSource.GetAccessTokenAsync();
-            if (token.Length>10) return true;
-            else return false;
+            if (token.Length > 10) return true;
+            else
+            {
+                UpdateUiState(UiState.InvalidCredentials);
+                return false;
+            }
         }
 
 
@@ -1331,8 +1336,11 @@ namespace SpeechTranslator
 
         private async void SettingsWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (await IsValidCredentialsAsync()) UpdateUiState(UiState.ReadyToConnect);
-            else UpdateUiState(UiState.InvalidCredentials);
+            if (Properties.Settings.Default.ClientID.Length > 10)
+            {
+                if (await IsValidCredentialsAsync()) UpdateUiState(UiState.ReadyToConnect);
+                else UpdateUiState(UiState.InvalidCredentials);
+            }
         }
 
         private void Speaker_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1434,6 +1442,11 @@ namespace SpeechTranslator
             SettingsWindow sw = new SettingsWindow();
             sw.Show();
             sw.Closing += SettingsWindowClosing;
+        }
+        private void MenuItem_About_Click(object sender, RoutedEventArgs e)
+        {
+            AboutBox ab = new AboutBox();
+            ab.Show();
         }
 
         private void MenuItem_Profanity_Checked(object sender, RoutedEventArgs e)
