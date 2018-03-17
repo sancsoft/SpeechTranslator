@@ -659,7 +659,7 @@ namespace SpeechTranslator
             options.AuthHeaderValue = ""; // set later in ConnectAsync.
             options.ClientAppId = new Guid("EA66703D-90A8-436B-9BD6-7A2707A2AD99");
             options.CorrelationId = this.correlationId;
-            options.Features = GetFeatures().ToString().Replace(" ", "");
+            options.Features = GetFeaturesAsString().Replace(" ", "");
             options.Profanity = ((SpeechClient.ProfanityFilter)Enum.Parse(typeof(SpeechClient.ProfanityFilter), GetProfanityLevel(), true)).ToString();
             options.Experimental = MenuItem_Experimental.IsChecked;
 
@@ -1140,6 +1140,22 @@ namespace SpeechTranslator
                 audioBytesSent += data.Count;
                 this.SafeInvoke(() => this.AudioBytesSentLabel.Content = audioBytesSent);
             }
+        }
+
+        /// <summary>
+        /// Get the features as a string that can be passed up by creating a comma separated list
+        /// </summary>
+        /// <returns>feature string CSV</returns>
+        private string GetFeaturesAsString()
+        {
+            string features = SpeechClient.Features.TimingInfo.ToString();
+            string comma = ",";
+
+            if (FeaturePartials.IsChecked.Value)
+                features = features + comma + SpeechClient.Features.Partial.ToString();
+            if (FeatureTTS.IsChecked.Value)
+                features = features + comma + SpeechClient.Features.TextToSpeech.ToString();
+            return features;
         }
 
         private SpeechClient.Features GetFeatures()
